@@ -31,6 +31,165 @@
         </a>
     </nav>
 
+    <!-- Hero Banner -->
+    <header class="hero-section">
+        <div class="hero-content">
+            <!-- Concept: uppercase filter -->
+            <h1 class="hero-title">{{ restaurant.name | uppercase }}</h1>
+            <p class="hero-subtitle">Table Reservation Module</p>
+        </div>
+    </header>
+
+    <!-- 4. Reservation Form Section (Adrian) -->
+    <section class="container">
+        <div class="section-title-wrap">
+            <h2 class="section-title">Reserve Your Table</h2>
+            <p class="section-subtitle">Fill in your reservation details to book an exclusive table</p>
+        </div>
+
+        <div class="form-card">
+            <!-- Concept: ng-submit -->
+            <form name="reservationForm" ng-submit="reserveTable(reservationForm)" novalidate>
+                
+                <!-- 1. Customer Name Field -->
+                <div class="form-group">
+                    <label for="customerName">Customer Name <span style="color:red">*</span></label>
+                    <!-- Concepts: ng-model, required, minlength, maxlength -->
+                    <input type="text" 
+                           id="customerName" 
+                           name="customerName" 
+                           class="form-control" 
+                           ng-model="reservation.customerName" 
+                           required 
+                           ng-minlength="3" 
+                           ng-maxlength="30" 
+                           placeholder="e.g. John Doe">
+                    <div class="error-text" ng-if="reservationForm.customerName.$dirty && reservationForm.customerName.$invalid">
+                        <span ng-if="reservationForm.customerName.$error.required">Customer name is required.</span>
+                        <span ng-if="reservationForm.customerName.$error.minlength">Name must be at least 3 characters long.</span>
+                        <span ng-if="reservationForm.customerName.$error.maxlength">Name cannot exceed 30 characters.</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <!-- 2. Email Address Field -->
+                    <div class="form-group">
+                        <label for="email">Email Address <span style="color:red">*</span></label>
+                        <!-- Concepts: ng-model, required, lowercase filter preview -->
+                        <input type="email" 
+                               id="email" 
+                               name="email" 
+                               class="form-control" 
+                               ng-model="reservation.email" 
+                               required 
+                               placeholder="john@example.com">
+                        <div class="error-text" ng-if="reservationForm.email.$dirty && reservationForm.email.$invalid">
+                            <span ng-if="reservationForm.email.$error.required">Email address is required.</span>
+                            <span ng-if="reservationForm.email.$error.email">Please enter a valid email address.</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Phone Number Field -->
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span style="color:red">*</span></label>
+                        <!-- Concepts: ng-model, required, minlength, maxlength -->
+                        <input type="text" 
+                               id="phone" 
+                               name="phone" 
+                               class="form-control" 
+                               ng-model="reservation.phone" 
+                               required 
+                               ng-minlength="10" 
+                               ng-maxlength="10" 
+                               placeholder="9876543210">
+                        <div class="error-text" ng-if="reservationForm.phone.$dirty && reservationForm.phone.$invalid">
+                            <span ng-if="reservationForm.phone.$error.required">Phone number is required.</span>
+                            <span ng-if="reservationForm.phone.$error.minlength || reservationForm.phone.$error.maxlength">Phone number must be exactly 10 digits.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <!-- 4. Reservation Date Field -->
+                    <div class="form-group">
+                        <label for="date">Reservation Date <span style="color:red">*</span></label>
+                        <!-- Concepts: ng-model, required -->
+                        <input type="date" 
+                               id="date" 
+                               name="date" 
+                               class="form-control" 
+                               ng-model="reservation.date" 
+                               required>
+                        <div class="error-text" ng-if="reservationForm.date.$dirty && reservationForm.date.$invalid">
+                            Reservation date is required.
+                        </div>
+                    </div>
+
+                    <!-- 5. Reservation Time Field -->
+                    <div class="form-group">
+                        <label for="time">Reservation Time <span style="color:red">*</span></label>
+                        <!-- Concepts: ng-model, required -->
+                        <input type="time" 
+                               id="time" 
+                               name="time" 
+                               class="form-control" 
+                               ng-model="reservation.time" 
+                               required>
+                        <div class="error-text" ng-if="reservationForm.time.$dirty && reservationForm.time.$invalid">
+                            Reservation time is required.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <!-- 6. Guests Field -->
+                    <div class="form-group">
+                        <label for="guests">Number of Guests <span style="color:red">*</span></label>
+                        <!-- Concepts: ng-model, required, number -->
+                        <input type="number" 
+                               id="guests" 
+                               name="guests" 
+                               class="form-control" 
+                               ng-model="reservation.guests" 
+                               min="1" 
+                               max="20" 
+                               required>
+                        <div class="error-text" ng-if="reservationForm.guests.$dirty && reservationForm.guests.$invalid">
+                            Guest count must be between 1 and 20.
+                        </div>
+                    </div>
+
+                    <!-- 7. Table Seating Preference Dropdown -->
+                    <div class="form-group">
+                        <label for="tableType">Indoor/Outdoor Preference <span style="color:red">*</span></label>
+                        <!-- Concepts: ng-model, required, ng-options -->
+                        <select id="tableType" 
+                                name="tableType" 
+                                class="form-control" 
+                                ng-model="reservation.tableType" 
+                                ng-options="opt.value as opt.label for opt in tableTypes" 
+                                required>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Concept: lowercase filter live preview -->
+                <div class="email-preview" ng-if="reservation.email">
+                    <i class="fas fa-envelope"></i> Confirmation email will be sent to: <strong>{{ reservation.email | lowercase }}</strong>
+                </div>
+
+                <!-- Concept: ng-disabled -->
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;" ng-disabled="reservationForm.$invalid">
+                    <i class="fas fa-calendar-check"></i> Reserve Table Now
+                </button>
+
+            </form>
+
+            <!-- Submitted Feedback Banner -->
+            <div class="confirmation-card" ng-if="isSubmitted">
+                <h3><i class="fas fa-check-circle"></i> Reservation Form Submitted Successfully!</h3>
+                <p>Customer: <strong>{{ submittedData.customerName }}</strong> | Guests: <strong>{{ submittedData.guests }}</strong> | Table: <strong>{{ submittedData.tableType }}</strong></p>
+                <button class="btn-primary" style="margin-top: 1rem;" ng-click="resetForm()">Make Another Reservation</button>
     <!-- 1. Hero Section (Logo & Banner Image) -->
     <header class="hero-section">
         <div class="hero-content">
