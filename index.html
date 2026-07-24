@@ -18,7 +18,7 @@
     <script src="js/app.js"></script>
 </head>
 
-<body ng-controller="MainController">
+<body ng-controller="MainController" ng-cloak>
 
     <div class="app-wrapper">
 
@@ -32,26 +32,23 @@
 
                 <!-- Navigation Links with Hugeicons -->
                 <nav class="nav-links">
-                    <button class="nav-btn" ng-class="{active: currentView === 'dashboard'}"
+                    <button class="nav-btn" ng-class="{'active': currentView === 'dashboard'}"
                         ng-click="switchView('dashboard')">
                         <i class="hgi-stroke hgi-dashboard-square-01 icon-sm"></i> Dashboard
                     </button>
-                    <button class="nav-btn" ng-class="{active: currentView === 'reservation' || currentView === 'summary'}"
+                    <button class="nav-btn" ng-class="{'active': currentView === 'reservation' || currentView === 'summary'}"
                         ng-click="switchView('reservation')">
                         <i class="hgi-stroke hgi-restaurant-table icon-sm"></i> Book Table
                     </button>
-                    <button class="nav-btn" ng-class="{active: currentView === 'menu' || currentView === 'cart'}"
+                    <button class="nav-btn" ng-class="{'active': currentView === 'menu' || currentView === 'cart'}"
                         ng-click="switchView('menu')">
                         <i class="hgi-stroke hgi-menu-restaurant icon-sm"></i> Food Menu
                     </button>
-                    <button class="nav-btn" ng-class="{active: currentView === 'orders'}"
+                    <button class="nav-btn" ng-class="{'active': currentView === 'orders'}"
                         ng-click="switchView('orders')">
                         <i class="hgi-stroke hgi-clock-01 icon-sm"></i> Order History <span class="badge"
                             style="background: var(--accent-orange); color: white; border-radius: 9999px; padding: 2px 6px; font-size: 11px; margin-left: 4px;">{{
                             orderHistory.length }}</span>
-                    </button>
-                    <button class="nav-btn" ng-class="{active: currentView === 'payment'}"
-                        ng-click="switchView('payment')" style="display: none;">
                     </button>
 
                     <!-- Cart Button — utility action, no active state, sits after Order History -->
@@ -97,34 +94,90 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; z-index: 1;">
-                    <button class="btn-primary-cta"
-                        style="width: auto; padding: 12px 24px; background: white; color: var(--primary);"
-                        ng-click="switchView('menu')">
-                        <i class="hgi-stroke hgi-menu-restaurant icon-sm" style="margin-right: 6px;"></i> Browse Menu
-                        POS
+                    <button class="hero-btn-primary" ng-click="switchView('menu')">
+                        <i class="hgi-stroke hgi-menu-restaurant icon-sm"></i> Browse Menu POS
                     </button>
-                    <button class="pill-btn"
-                        style="padding: 12px 24px; border-color: rgba(255,255,255,0.3); color: white;"
-                        ng-click="switchView('reservation')">
-                        <i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 6px;"></i> Book a Table
+                    <button class="hero-btn-secondary" ng-click="switchView('reservation')">
+                        <i class="hgi-stroke hgi-calendar-01 icon-sm"></i> Book a Table
                     </button>
                 </div>
             </div>
 
-            <!-- Overview Metrics Grid -->
-            <div class="section-header">
-                <h2 class="section-title">Restaurant Overview</h2>
+            <!-- NEW FEATURE 1: Quick Services & Action Hub -->
+            <div class="section-header" style="margin-top: 28px; margin-bottom: 16px;">
+                <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="hgi-stroke hgi-flash icon-md" style="color: var(--accent-orange);"></i> Quick Dining Services
+                </h2>
             </div>
-            <div class="dashboard-metrics-grid">
-                <div class="metric-card" ng-repeat="card in getDashboardCards()"
-                    ng-style="{'border-top': '4px solid ' + card.accentColor}">
-                    <div class="metric-icon-box" ng-style="{'color': card.accentColor}">
-                        <i class="hgi-stroke icon-lg" ng-class="card.hugeicon"></i>
+            <div class="dashboard-services-grid">
+                <div class="dashboard-service-card" ng-click="switchView('reservation')">
+                    <div class="service-icon-wrapper" style="background: rgba(249, 115, 22, 0.1); color: var(--accent-orange);">
+                        <i class="hgi-stroke hgi-restaurant-table icon-lg"></i>
                     </div>
-                    <div class="metric-details">
-                        <h3>{{ card.title }}</h3>
-                        <div class="metric-value">{{ card.value }}</div>
-                        <div class="metric-subtitle">{{ card.subtitle }}</div>
+                    <div>
+                        <h3 class="service-card-title">Book Table</h3>
+                        <p class="service-card-desc">Reserve Indoor, Terrace, Rooftop, or VIP Suites</p>
+                    </div>
+                    <i class="hgi-stroke hgi-arrow-right-01 service-arrow icon-sm"></i>
+                </div>
+
+                <div class="dashboard-service-card" ng-click="switchView('menu')">
+                    <div class="service-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
+                        <i class="hgi-stroke hgi-menu-restaurant icon-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="service-card-title">Pre-Order Food</h3>
+                        <p class="service-card-desc">Order gourmet dishes in advance for instant serving</p>
+                    </div>
+                    <i class="hgi-stroke hgi-arrow-right-01 service-arrow icon-sm"></i>
+                </div>
+
+                <div class="dashboard-service-card" ng-click="switchView('orders')">
+                    <div class="service-icon-wrapper" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);">
+                        <i class="hgi-stroke hgi-clock-01 icon-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="service-card-title">Live Kitchen Tracker</h3>
+                        <p class="service-card-desc">Track active orders & digital receipts in real-time</p>
+                    </div>
+                    <i class="hgi-stroke hgi-arrow-right-01 service-arrow icon-sm"></i>
+                </div>
+            </div>
+
+            <!-- NEW FEATURE 2: Partner Luxury Dining Venues Grid -->
+            <div class="section-header" style="margin-top: 32px; margin-bottom: 16px;">
+                <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="hgi-stroke hgi-building-03 icon-md" style="color: var(--accent-blue);"></i> Partner Luxury Venues
+                </h2>
+                <a href="" class="view-all-link" ng-click="switchView('reservation')">
+                    Explore All Venues <i class="hgi-stroke hgi-arrow-right-01 icon-sm"></i>
+                </a>
+            </div>
+            <div class="dashboard-venues-grid">
+                <div class="restaurant-card-style" ng-repeat="res in restaurants.slice(0, 3) track by res.id">
+                    <div class="restaurant-img-container">
+                        <img ng-src="{{ res.image }}" alt="{{ res.name }}">
+                        <span class="rating-badge-pill">
+                            <i class="hgi-stroke hgi-star icon-sm" style="color: #facc15;"></i> {{ res.rating }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3 class="restaurant-card-title">{{ res.name }}</h3>
+                        <div class="restaurant-subtext-row">
+                            <span>{{ res.cuisine }}</span>
+                            <span><i class="hgi-stroke hgi-location-01 icon-sm" style="color: #f97316;"></i> {{ res.distance }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card-bottom" style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Avg Cost</span>
+                            <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">{{ res.avgCost }}</span>
+                        </div>
+                        <button class="btn-primary-cta" style="height: 38px; width: auto; padding: 0 16px; font-size: 12px; border-radius: 8px;" ng-click="selectRestaurantForBooking(res); switchView('reservation');">
+                            <i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 4px;"></i> Reserve Table
+                        </button>
                     </div>
                 </div>
             </div>
@@ -220,10 +273,39 @@
 
 
         <!-- FOOD MENU / POS VIEW (Full Width Grid System) -->
-        <div class="main-layout" ng-if="currentView === 'menu' || currentView === 'cart'">
+        <div class="full-width-content" ng-if="currentView === 'menu' || currentView === 'cart'">
+            <div class="menu-layout-split">
+                <!-- Left Main Content Section -->
+                <main class="left-content">
 
-            <!-- Left Main Content Section -->
-            <main class="left-content">
+                <!-- Active Restaurant Venue Switcher Banner -->
+                <div class="venue-switcher-banner">
+                    <div class="venue-info-card">
+                        <img ng-src="{{ selectedRestaurant.image }}" alt="{{ selectedRestaurant.name }}" class="venue-banner-img">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span class="venue-status-tag"><i class="hgi-stroke hgi-restaurant-01 icon-sm"></i> Serving Menu</span>
+                                <span class="venue-rating-tag">★ {{ selectedRestaurant.rating }}</span>
+                            </div>
+                            <h2 class="venue-banner-title">{{ selectedRestaurant.name }}</h2>
+                            <p class="venue-banner-subtext">{{ selectedRestaurant.cuisine }} • {{ selectedRestaurant.address }}</p>
+                        </div>
+                    </div>
+
+                    <div class="venue-banner-divider"></div>
+
+                    <div class="venue-selector-controls">
+                        <span class="venue-control-label">Select Restaurant:</span>
+                        <div class="venue-pills-scroll-container">
+                            <button class="venue-select-pill" ng-repeat="res in restaurants"
+                                ng-class="{active: selectedRestaurant.id === res.id}"
+                                ng-click="setMenuRestaurant(res)">
+                                <i class="hgi-stroke hgi-building-03 icon-sm" ng-if="selectedRestaurant.id === res.id"></i>
+                                {{ res.shortName }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Special Discount Today Carousel/Grid -->
                 <section class="section-header" ng-if="!searchQuery && selectedCategory === 'All'">
@@ -446,19 +528,106 @@
 
             </aside>
         </div>
+    </div>
 
 
-        <!-- TABLE RESERVATION VIEW (Refined 2-Column Layout) -->
+        <!-- TABLE RESERVATION VIEW (Multi-Restaurant Explorer & Booking Form) -->
         <div class="full-width-content" ng-if="currentView === 'reservation'">
-            <div class="reservation-layout-split">
+
+            <!-- STEP 1: Available Restaurants Explorer Grid -->
+            <div ng-if="reservationStep === 'select_restaurant'">
+                <div class="section-header" style="margin-bottom: 20px;">
+                    <div>
+                        <h2 class="section-title" style="display: flex; align-items: center; gap: 8px; font-size: 26px;">
+                            <i class="hgi-stroke hgi-restaurant-01 icon-md" style="color: var(--accent-orange);"></i> Select a Restaurant Venue to Book Table
+                        </h2>
+                        <p style="color: var(--text-muted); font-size: 15px; margin-top: 4px;">Choose from our partner luxury dining venues, reserve a table, and pre-order your meal.</p>
+                    </div>
+                </div>
+
+                <!-- Restaurant Search & Cuisine Filter Toolbar -->
+                <div class="restaurant-filter-toolbar">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; flex-wrap: wrap;">
+                        <div class="header-search" style="width: 100%; max-width: 380px;">
+                            <i class="hgi-stroke hgi-search-01 search-icon icon-sm"></i>
+                            <input type="text" ng-model="restaurantSearchQuery" placeholder="Search restaurant name, cuisine...">
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
+                            Available Venues: <strong style="color: var(--primary);">{{ getFilteredRestaurants().length }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="restaurant-pills-scroll-row">
+                        <button class="restaurant-pill-btn" ng-repeat="cuisine in cuisinesList"
+                            ng-class="{active: selectedCuisineFilter === cuisine}"
+                            ng-click="$parent.selectedCuisineFilter = cuisine">
+                            {{ cuisine }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Restaurant Cards Grid (Matching food-card UI Layout) -->
+                <div class="restaurant-cards-grid">
+                    <div class="restaurant-card-style" ng-repeat="res in getFilteredRestaurants()">
+                        <div class="restaurant-img-container">
+                            <img ng-src="{{ res.image }}" alt="{{ res.name }}">
+                            <span class="rating-badge-pill">
+                                <i class="hgi-stroke hgi-star icon-sm" style="color: #facc15;"></i> {{ res.rating }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <h3 class="restaurant-card-title">{{ res.name }}</h3>
+                            
+                            <div class="restaurant-subtext-row">
+                                <span>{{ res.cuisine }}</span>
+                                <span><i class="hgi-stroke hgi-location-01 icon-sm" style="color: #f97316;"></i> {{ res.distance }}</span>
+                            </div>
+
+                            <!-- Venue Features Pills -->
+                            <div class="restaurant-features-tags" style="margin-top: 8px;">
+                                <span class="res-feature-pill" ng-repeat="feat in res.features">{{ feat }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Bottom Section (Matching food-card bottom layout) -->
+                        <div class="card-bottom" style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                            <div>
+                                <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block;">Avg Cost</span>
+                                <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">{{ res.avgCost }}</span>
+                            </div>
+
+                            <button class="btn-primary-cta" style="height: 38px; width: auto; padding: 0 16px; font-size: 12px; border-radius: 8px;" ng-click="selectRestaurantForBooking(res)">
+                                <i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 4px;"></i> Reserve Table
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Table Reservation Form for Selected Restaurant -->
+            <div class="reservation-layout-split" ng-if="reservationStep === 'form'">
 
                 <!-- Left Main Form Card -->
                 <div class="reservation-card">
-                    <h2 class="section-title" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                        <i class="hgi-stroke hgi-calendar-01 icon-md"></i> Reserve a Table
-                    </h2>
-                    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Select your preferred
-                        table section and reserve your dining spot.</p>
+                    
+                    <!-- Selected Restaurant Header Bar -->
+                    <div class="selected-restaurant-header-bar">
+                        <button class="btn-secondary-cta" style="height: 36px; padding: 0 14px; font-size: 12px;" ng-click="goBackToRestaurantList()">
+                            <i class="hgi-stroke hgi-arrow-left-01 icon-sm" style="margin-right: 4px;"></i> Switch Restaurant
+                        </button>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
+                            <img ng-src="{{ selectedRestaurant.image }}" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
+                            <div>
+                                <h2 class="section-title" style="font-size: 20px; margin: 0;">{{ selectedRestaurant.name }}</h2>
+                                <span style="font-size: 13px; color: var(--text-muted);">{{ selectedRestaurant.cuisine }} • {{ selectedRestaurant.address }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 20px 0 12px 0; display: flex; align-items: center; gap: 6px;">
+                        <i class="hgi-stroke hgi-calendar-01 icon-sm"></i> Reserve Table & Select Dining Options
+                    </h3>
 
                     <!-- Table Type Visual Selection Cards -->
                     <label class="custom-label" style="margin-bottom: 10px;">
@@ -466,7 +635,7 @@
                         Section
                     </label>
                     <div class="table-type-cards-grid">
-                        <div class="table-type-card" ng-repeat="tt in tableTypes"
+                        <div class="table-type-card" ng-repeat="tt in getTableTypes()"
                             ng-class="{selected: reservation.tableType === tt.value}"
                             ng-click="reservation.tableType = tt.value">
                             <div class="table-card-header">
@@ -540,7 +709,7 @@
 
                         <div class="form-group-full" style="margin-top: 8px;">
                             <button type="submit" ng-disabled="reservationForm.$invalid" class="btn-primary-cta">
-                                Confirm & Reserve Table
+                                Confirm & Reserve Table at {{ selectedRestaurant.shortName }}
                             </button>
                         </div>
                     </form>
@@ -1081,7 +1250,7 @@
         </div>
 
         <!-- VIEW 5: ORDER HISTORY PAGE -->
-        <div class="orders-layout-container" ng-if="currentView === 'orders'">
+        <div class="full-width-content" ng-if="currentView === 'orders'">
 
             <!-- Hero Banner Header -->
             <div class="dashboard-hero-refined" style="margin-bottom: 24px;">
@@ -1163,7 +1332,7 @@
 
                         <div>
                             <button class="btn-secondary-cta" style="height: 38px; padding: 0 16px; font-size: 12px;"
-                                ng-click="reorderItems(order)">
+                                ng-click="openReorderModal(order)">
                                 <i class="hgi-stroke hgi-shopping-cart-01 icon-sm" style="margin-right: 4px;"></i>
                                 Re-order Items
                             </button>
@@ -1206,6 +1375,71 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- Custom Re-Order Confirmation Modal -->
+        <div class="modal-backdrop" ng-if="showReorderModal" ng-cloak ng-click="closeReorderModal()">
+            <div class="modal-container" ng-click="$event.stopPropagation()">
+                
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <div class="modal-title-group">
+                        <div class="modal-icon-badge">
+                            <i class="hgi-stroke hgi-shopping-cart-01 icon-lg"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 17px; font-weight: 700; color: var(--text-main); margin: 0;">Re-Order Dishes</h3>
+                            <span style="font-size: 12px; color: var(--text-muted);">From Order #{{ selectedOrderForReorder.id }}</span>
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" ng-click="closeReorderModal()" title="Close">
+                        <i class="hgi-stroke hgi-cancel-01 icon-md"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body: Item Preview -->
+                <div class="modal-body">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+                        The following item(s) will be added directly into your active pre-order cart:
+                    </p>
+
+                    <div class="reorder-items-preview-list">
+                        <div class="reorder-item-preview-card" ng-repeat="item in selectedOrderForReorder.items">
+                            <img ng-src="{{ item.image }}" alt="{{ item.name }}" class="reorder-preview-img">
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="reorder-preview-name">{{ item.name }}</div>
+                                <div class="reorder-preview-qty">Qty: {{ item.quantity }} × {{ item.price | currency:'₹' }}</div>
+                            </div>
+                            <div class="reorder-preview-price">
+                                {{ (item.price * item.quantity) | currency:'₹' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Re-order Summary Note -->
+                    <div class="reorder-summary-banner">
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; color: #047857; font-weight: 600; display: block;">Items to add</span>
+                            <strong style="font-size: 14px; color: var(--text-main);">{{ selectedOrderForReorder.items.length }} Dish(es)</strong>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 11px; text-transform: uppercase; color: #047857; font-weight: 600; display: block;">Total Amount</span>
+                            <strong style="font-size: 18px; color: var(--accent-green);">{{ selectedOrderForReorder.totalAmount | currency:'₹' }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer Actions -->
+                <div class="modal-footer">
+                    <button class="btn-secondary-cta" style="padding: 12px 18px; font-size: 13px;" ng-click="closeReorderModal()">
+                        Cancel
+                    </button>
+                    <button class="btn-primary-cta" style="padding: 12px 18px; font-size: 13px;" ng-click="confirmReorder()">
+                        <i class="hgi-stroke hgi-shopping-cart-01 icon-sm" style="margin-right: 6px;"></i> Confirm & Add to Cart
+                    </button>
+                </div>
+
+            </div>
         </div>
 
     </div>
