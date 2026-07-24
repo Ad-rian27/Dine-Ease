@@ -21,6 +21,44 @@
 </head>
 <body ng-controller="MainController" ng-init="initApp()">
 
+    <!-- Header Title (Concept: uppercase filter) -->
+    <h1>{{ restaurant.name | uppercase }}</h1>
+    <h2>Booking Summary Module</h2>
+
+    <button ng-click="toggleSummary()">Toggle Booking Summary View</button>
+
+    <!-- 6. Booking Summary Section (Adrian) -->
+    <!-- Concepts: ng-show, date, currency, number, ng-readonly, ng-repeat -->
+    <div id="booking-summary-section" ng-show="isBooked">
+        <h3>Booking Successful</h3>
+
+        <p><strong>Customer:</strong> {{ bookingDetails.customerName }}</p>
+        <p><strong>Table:</strong> {{ bookingDetails.tableType }}</p>
+        
+        <!-- Concept: date filter -->
+        <p><strong>Date:</strong> {{ bookingDetails.date | date : 'dd MMMM yyyy' }}</p>
+        <p><strong>Time:</strong> {{ bookingDetails.time }}</p>
+        
+        <!-- Concept: number filter -->
+        <p><strong>Guests:</strong> {{ bookingDetails.guests | number }}</p>
+
+        <h4>Ordered Items</h4>
+        <ul>
+            <!-- Concept: ng-repeat, currency filter -->
+            <li ng-repeat="item in orderedItems">
+                {{ item.name }} x{{ item.qty }} - {{ (item.price * item.qty) | currency : '₹' : 0 }}
+            </li>
+        </ul>
+
+        <!-- Concept: currency filter -->
+        <p><strong>Grand Total:</strong> {{ grandTotal | currency : '₹' : 0 }}</p>
+
+        <!-- Concept: ng-readonly -->
+        <p>
+            <label for="refId">Booking Reference ID:</label>
+            <input type="text" id="refId" value="DE-{{ bookingDetails.date | date : 'yyyyMMdd' }}-{{ bookingDetails.phone | limitTo:-4 }}" ng-readonly="true">
+        </p>
+    </div>
     <!-- Navbar Header -->
     <nav class="navbar">
         <a href="#" class="nav-brand">
