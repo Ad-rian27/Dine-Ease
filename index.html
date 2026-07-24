@@ -1,11 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="restaurantApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+    <title>Dine-Ease | Dashboard Module (Adrian)</title>
     
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Application Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- AngularJS CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <!-- Application Logic Script -->
+    <script src="js/app.js"></script>
+</head>
+<body ng-controller="MainController" ng-init="initApp()">
+
+    <!-- Navbar Header -->
+    <nav class="navbar">
+        <a href="#" class="nav-brand">
+            <!-- Restaurant Logo Image -->
+            <img ng-src="{{ restaurant.logo }}" alt="Logo" class="brand-logo-img">
+            <!-- Concept: uppercase filter -->
+            <span class="brand-title">{{ restaurant.name | uppercase }}</span>
+        </a>
+    </nav>
+
+    <!-- 1. Hero Section (Logo & Banner Image) -->
+    <header class="hero-section">
+        <div class="hero-content">
+            <!-- Restaurant Logo Image -->
+            <img ng-src="{{ restaurant.logo }}" alt="Dine Ease Logo" class="hero-logo-img">
+            <!-- Concept: uppercase filter -->
+            <h1 class="hero-title">{{ restaurant.name | uppercase }}</h1>
+            <p class="hero-subtitle">Dashboard Overview Module — Team Lead: Adrian</p>
+        </div>
+    </header>
+
+    <!-- 2. Dashboard Cards Module (Adrian) -->
+    <section id="dashboard-section" class="container">
+        <div class="section-title-wrap">
+            <h2 class="section-title">Live Overview</h2>
+            <p class="section-subtitle">Real-time table availability, specials, and ratings</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Concepts Used: ng-repeat, ng-style, Expressions, Images -->
+            <div class="dash-card" ng-repeat="card in getDashboardCards()" ng-style="card.cardStyle">
+                <!-- Card Image -->
+                <div class="dash-card-image-wrap">
+                    <img ng-src="{{ card.image }}" alt="{{ card.title }}" class="dash-card-img">
+                </div>
+
+                <div class="dash-card-body">
+                    <div class="dash-card-header">
+                        <div class="dash-icon">
+                            <i class="fas {{ card.icon }}"></i>
+                        </div>
+                        <span class="dash-badge">{{ card.badge }}</span>
+                    </div>
+                    
+                    <!-- Dashboard Expressions -->
+                    <div class="dash-value">{{ card.value }}</div>
+                    <div class="dash-title">{{ card.title }}</div>
+                    <div class="dash-subtitle">{{ card.subtitle }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </body>
 </html>
