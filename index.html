@@ -11,7 +11,15 @@
 </head>
 <body ng-controller="MainController">
 
-    <section id="food-menu">
+    <!-- Dashboard View -->
+    <div id="dashboard-view" ng-show="currentView === 'dashboard'">
+        <!-- Temporary Table Booking trigger for testing -->
+        <div style="padding: 20px; background: #eee; margin-bottom: 20px;">
+            <h3>Dummy Table Booking Section</h3>
+            <button ng-click="goToPayment(500, 'table_reservation')">Book Table for ₹500</button>
+        </div>
+
+        <section id="food-menu">
         <h2>Our Menu</h2>
         
         <div class="menu-container">
@@ -42,6 +50,57 @@
                 
             </div>
         </div>
+    </section>
+        
+        <!-- Temporary Checkout trigger for testing -->
+        <div style="padding: 20px; text-align: right; border-top: 1px solid #ccc; margin-top: 20px;">
+            <button ng-click="goToPayment(1450, 'food_order')">Checkout Cart (Dummy ₹1450)</button>
+        </div>
+        
+    </div> <!-- End Dashboard View -->
+
+    <!-- Payment View -->
+    <section id="payment-view" ng-show="currentView === 'payment'" style="padding: 40px; text-align: center;">
+        
+        <!-- Processing Loader -->
+        <div ng-show="isProcessingPayment" style="padding: 40px;">
+            <div class="loader" style="border: 6px solid #f3f3f3; border-top: 6px solid #4CAF50; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            <h3 style="margin-top: 20px; color: #333;">Processing Payment...</h3>
+            <style>
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+        </div>
+        
+        <!-- Payment Form -->
+        <div ng-hide="paymentSuccess || isProcessingPayment">
+            <h2 ng-if="paymentContext === 'table_reservation'">Pay Table Reservation Fee</h2>
+            <h2 ng-if="paymentContext === 'food_order'">Pay Your Food Bill</h2>
+            
+            <h3>Total Amount: {{ amountToPay | currency:'₹' }}</h3>
+            
+            <div style="margin: 20px 0;">
+                <p>Select Payment Method:</p>
+                <label><input type="radio" name="payment_method" value="card" checked> Credit/Debit Card</label>
+                <label><input type="radio" name="payment_method" value="upi"> UPI</label>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <input type="text" ng-model="dummyPaymentDetails" placeholder="Enter Payment Details (Dummy)" style="padding: 10px; width: 250px;">
+            </div>
+            
+            <button ng-click="completePayment()" style="padding: 10px 30px; font-size: 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Pay Now</button>
+            <button ng-click="backToDashboard()" style="padding: 10px 30px; font-size: 16px; margin-left: 10px; cursor: pointer;">Cancel</button>
+        </div>
+        
+        <!-- Success Message -->
+        <div ng-show="paymentSuccess" style="color: green; font-size: 24px; padding: 40px;">
+            <h2>Payment Successful!</h2>
+            <p ng-if="paymentContext === 'table_reservation'">Your table has been reserved. See you soon!</p>
+            <p ng-if="paymentContext === 'food_order'">Your food order has been placed and is being prepared!</p>
+            
+            <button ng-click="backToDashboard()" style="margin-top: 20px; padding: 10px 20px;">Return to Dashboard</button>
+        </div>
+        
     </section>
 
 </body>
