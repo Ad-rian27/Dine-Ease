@@ -179,10 +179,6 @@ app.controller('MainController', ['$scope', '$timeout', function($scope, $timeou
         
         $scope.reservedTablesCount = 5; // Dummy dynamic data
         
-        $scope.todaysSpecialStyle = {
-            'border-top': '4px solid #F4C430',
-            'background': 'linear-gradient(135deg, #ffffff 0%, #fffdf0 100%)'
-        };
     };
 
     // Handle Form Submission (Table Reservation)
@@ -228,26 +224,22 @@ app.controller('MainController', ['$scope', '$timeout', function($scope, $timeou
             {
                 title: 'Available Tables',
                 value: $scope.getAvailableTables(),
-                subtitle: 'Out of ' + $scope.restaurant.totalTables + ' total tables',
-                cardStyle: { 'border-top': '4px solid #C62828' }
+                subtitle: 'Out of ' + $scope.restaurant.totalTables + ' total tables'
             },
             {
                 title: "Today's Special",
                 value: $scope.getTodaysSpecialCount() + ' Dishes',
-                subtitle: 'Chef Recommended Items',
-                cardStyle: $scope.todaysSpecialStyle
+                subtitle: 'Chef Recommended Items'
             },
             {
                 title: 'Customer Rating',
                 value: $scope.restaurant.rating + ' / 5.0',
-                subtitle: 'Based on 450+ reviews',
-                cardStyle: { 'border-top': '4px solid #4CAF50' }
+                subtitle: 'Based on 450+ reviews'
             },
             {
                 title: 'Total Menu Items',
                 value: $scope.menuItems ? $scope.menuItems.length : 0,
-                subtitle: 'Starters, Mains & Drinks',
-                cardStyle: { 'border-top': '4px solid #2196F3' }
+                subtitle: 'Starters, Mains & Drinks'
             }
         ];
     };

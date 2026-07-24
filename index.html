@@ -4,21 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Table Reservation & Food Pre-Ordering</title>
-    <link rel="stylesheet" href="css/style.css">
-    
     <!-- AngularJS -->
     <script src="node_modules/angular/angular.min.js"></script>
     <script src="js/app.js"></script>
-    
-    <style>
-        /* Temporary basic inline styles to make the navigation usable since CSS is missing */
-        nav { background: #333; padding: 15px; color: white; display: flex; gap: 15px; }
-        nav button { background: none; border: 1px solid white; color: white; padding: 5px 15px; cursor: pointer; }
-        nav button:hover { background: white; color: #333; }
-        .section-container { padding: 20px; }
-        .dashboard-cards { display: flex; gap: 20px; }
-        .card { padding: 20px; background: #f9f9f9; border: 1px solid #ddd; width: 200px; text-align: center;}
-    </style>
 </head>
 <body ng-controller="MainController">
 
@@ -32,56 +20,56 @@
     </nav>
 
     <!-- 1. DASHBOARD VIEW (Adrian's Part) -->
-    <section class="section-container" ng-if="currentView === 'dashboard'">
+    <section ng-if="currentView === 'dashboard'">
         <h1>Welcome to {{ restaurant.fullName }}</h1>
         <p><em>{{ restaurant.tagline }}</em></p>
         
-        <div class="dashboard-cards">
-            <div class="card" ng-repeat="card in getDashboardCards()" ng-style="card.cardStyle">
+        <div>
+            <div ng-repeat="card in getDashboardCards()">
                 <h3>{{ card.title }}</h3>
-                <p style="font-size: 24px; font-weight: bold;">{{ card.value }}</p>
-                <p style="font-size: 12px; color: #666;">{{ card.subtitle }}</p>
+                <p>{{ card.value }}</p>
+                <p>{{ card.subtitle }}</p>
             </div>
         </div>
     </section>
 
 
     <!-- 2. TABLE RESERVATION VIEW (Adrian's Part) -->
-    <section class="section-container" ng-if="currentView === 'reservation'">
+    <section ng-if="currentView === 'reservation'">
         <h2>Reserve a Table</h2>
         
-        <form name="reservationForm" ng-submit="reserveTable(reservationForm)" novalidate style="max-width: 400px;">
-            <div style="margin-bottom: 15px;">
+        <form name="reservationForm" ng-submit="reserveTable(reservationForm)" novalidate>
+            <div>
                 <label>Name:</label>
-                <input type="text" ng-model="reservation.customerName" required style="width: 100%; padding: 8px;">
+                <input type="text" ng-model="reservation.customerName" required>
             </div>
             
-            <div style="margin-bottom: 15px;">
+            <div>
                 <label>Table Type:</label>
-                <select ng-model="reservation.tableType" ng-options="option.value as option.label for option in tableTypes" required style="width: 100%; padding: 8px;"></select>
+                <select ng-model="reservation.tableType" ng-options="option.value as option.label for option in tableTypes" required></select>
             </div>
             
-            <div style="margin-bottom: 15px;">
+            <div>
                 <label>Date & Time:</label>
-                <input type="date" ng-model="reservation.date" required style="padding: 8px;">
-                <input type="time" ng-model="reservation.time" required style="padding: 8px;">
+                <input type="date" ng-model="reservation.date" required>
+                <input type="time" ng-model="reservation.time" required>
             </div>
             
-            <div style="margin-bottom: 15px;">
+            <div>
                 <label>Guests:</label>
-                <input type="number" ng-model="reservation.guests" min="1" max="20" required style="padding: 8px;">
+                <input type="number" ng-model="reservation.guests" min="1" max="20" required>
             </div>
             
-            <button type="submit" ng-disabled="reservationForm.$invalid" style="padding: 10px 20px;">Submit Reservation</button>
+            <button type="submit" ng-disabled="reservationForm.$invalid">Submit Reservation</button>
         </form>
     </section>
 
 
     <!-- 3. BOOKING SUMMARY VIEW (Adrian's Part) -->
-    <section class="section-container" ng-if="currentView === 'summary'">
+    <section ng-if="currentView === 'summary'">
         <h2>Booking Successful!</h2>
         
-        <div style="background: #eef9ee; border: 1px solid #4CAF50; padding: 20px; max-width: 400px;">
+        <div>
             <p><strong>Customer Name:</strong> {{ submittedData.customerName }}</p>
             <p><strong>Table Type:</strong> {{ submittedData.tableType }}</p>
             <p><strong>Date:</strong> {{ submittedData.date | date:'longDate' }}</p>
@@ -89,43 +77,41 @@
             <p><strong>Guests:</strong> {{ submittedData.guests }}</p>
         </div>
         
-        <div style="background: #fffdf0; border: 1px solid #F4C430; padding: 20px; max-width: 400px;">
+        <div>
             <h3>Would you like to Pre-Order Food?</h3>
-            <p style="margin-bottom: 15px;">Pre-order your meal now so it's ready exactly when you arrive!</p>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button ng-click="startPreOrder()" style="padding: 10px 20px; background: #2196F3; color: white; border: none; cursor: pointer; font-size: 16px;">Yes, Browse Menu</button>
-                <button ng-click="goToPayment(getTablePrice(), 'table_reservation')" style="padding: 10px 20px; background: #eee; border: 1px solid #ccc; cursor: pointer;">No, Just Pay Booking Fee ({{ getTablePrice() | currency:'₹' }})</button>
+            <p>Pre-order your meal now so it's ready exactly when you arrive!</p>
+            <div>
+                <button ng-click="startPreOrder()">Yes, Browse Menu</button>
+                <button ng-click="goToPayment(getTablePrice(), 'table_reservation')">No, Just Pay Booking Fee ({{ getTablePrice() | currency:'₹' }})</button>
             </div>
         </div>
     </section>
 
 
     <!-- 4. FOOD MENU VIEW (Goutham's Part) -->
-    <section class="section-container" id="food-menu" ng-if="currentView === 'menu'">
+    <section id="food-menu" ng-if="currentView === 'menu'">
         <h2>Our Menu</h2>
         
-        <div class="menu-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
-            <div class="menu-card" ng-repeat="item in menuItems" style="border: 1px solid #ddd; padding: 15px; width: 250px;">
-                <img ng-src="{{ item.image }}" alt="{{ item.name }}" class="menu-image" style="width: 100%; height: 150px; object-fit: cover;">
+        <div>
+            <div ng-repeat="item in menuItems">
+                <img ng-src="{{ item.image }}" alt="{{ item.name }}">
                 
-                <div class="menu-details">
+                <div>
                     <h3>{{ item.name }}</h3>
-                    <p class="category">Category: {{ item.category }}</p>
-                    <p style="font-size: 12px; color: #888;">Prep Time: {{ item.prepTime }} mins</p>
-                    <p class="price">Price: {{ item.price | currency:'₹' }}</p>
+                    <p>Category: {{ item.category }}</p>
+                    <p>Prep Time: {{ item.prepTime }} mins</p>
+                    <p>Price: {{ item.price | currency:'₹' }}</p>
                     
-                    <span class="type-badge" ng-class="{'badge-veg': item.type === 'Veg', 'badge-non-veg': item.type === 'Non-Veg'}" style="padding: 3px 8px; border-radius: 4px; background: {{ item.type === 'Veg' ? 'green' : 'red' }}; color: white;">
-                        {{ item.type }}
-                    </span>
+                    <span>{{ item.type }}</span>
                     
-                    <p class="availability">
-                        <span ng-if="item.available" style="color: green;">Available</span>
-                        <span ng-if="!item.available" style="color: red;">Out of Stock</span>
+                    <p>
+                        <span ng-if="item.available">Available</span>
+                        <span ng-if="!item.available">Out of Stock</span>
                     </p>
                     
-                    <div class="order-controls" ng-if="item.available" style="margin-top: 15px;">
+                    <div ng-if="item.available">
                         <label for="quantity-{{item.id}}">Qty:</label>
-                        <input type="number" id="quantity-{{item.id}}" ng-model="item.quantity" min="1" max="10" style="width: 50px;">
+                        <input type="number" id="quantity-{{item.id}}" ng-model="item.quantity" min="1" max="10">
                         <button ng-click="addToCart(item)">Add to Cart</button>
                     </div>
                 </div>
@@ -135,18 +121,18 @@
 
 
     <!-- 5. PRE-ORDER CART VIEW (Ananthu's Part) -->
-    <section class="section-container preorder-cart" ng-if="currentView === 'cart'">
+    <section ng-if="currentView === 'cart'">
         <h2>Your Order Cart</h2>
 
-        <div ng-if="cart.length === 0" class="empty-cart">
+        <div ng-if="cart.length === 0">
             <p>Your cart is empty. Add food items from the menu to start pre-ordering.</p>
             <button ng-click="switchView('menu')">Browse Menu</button>
         </div>
 
-        <div ng-if="cart.length > 0" class="cart-table-wrapper">
-            <table class="order-table" style="width: 100%; text-align: left; border-collapse: collapse;">
+        <div ng-if="cart.length > 0">
+            <table>
                 <thead>
-                    <tr style="border-bottom: 2px solid #ccc;">
+                    <tr>
                         <th>Food Name</th>
                         <th>Quantity</th>
                         <th>Price</th>
@@ -155,31 +141,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="item in cart" style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 10px 0;">{{ item.name }}</td>
-                        <td class="quantity-controls">
+                    <tr ng-repeat="item in cart">
+                        <td>{{ item.name }}</td>
+                        <td>
                             <button type="button" ng-click="decreaseQty(item)">-</button>
-                            <span style="padding: 0 10px;">{{ item.quantity }}</span>
+                            <span>{{ item.quantity }}</span>
                             <button type="button" ng-click="increaseQty(item)">+</button>
                         </td>
                         <td>{{ item.price | currency:'₹' }}</td>
                         <td>{{ getItemTotal(item) | currency:'₹' }}</td>
                         <td>
-                            <button type="button" ng-click="removeItem(item)" style="color: red;">Remove</button>
+                            <button type="button" ng-click="removeItem(item)">Remove</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
             
-            <div style="background: #eef9ee; border: 1px solid #4CAF50; padding: 15px; margin-top: 20px; text-align: center; font-size: 16px; font-weight: bold; color: #333; border-radius: 5px;">
+            <div>
                 ⏱️ {{ getWaitTimeMessage() }}
             </div>
 
-            <div class="grand-total" style="margin-top: 20px; font-size: 20px; text-align: right;">
-                <div ng-if="pendingTablePayment" style="font-size: 16px; color: #555; margin-bottom: 10px;">
+            <div>
+                <div ng-if="pendingTablePayment">
                     <div>Food Total: {{ getGrandTotal() | currency:'₹' }}</div>
                     <div>Table Booking Fee: {{ getTablePrice() | currency:'₹' }}</div>
-                    <div style="font-size: 22px; color: #000; margin-top: 10px;">
+                    <div>
                         <strong>Combined Total:</strong> {{ getGrandTotal() + getTablePrice() | currency:'₹' }}
                     </div>
                 </div>
@@ -189,24 +175,21 @@
                 </div>
             </div>
             
-            <div style="text-align: right; margin-top: 20px;">
-                <button ng-if="pendingTablePayment" ng-click="goToPayment(getGrandTotal() + getTablePrice(), 'combined_order')" style="padding: 10px 20px; font-size: 18px; background: #4CAF50; color: white; border: none;">Pay Table + Food ({{ getGrandTotal() + getTablePrice() | currency:'₹' }})</button>
-                <button ng-if="!pendingTablePayment" ng-click="goToPayment(getGrandTotal(), 'food_order')" style="padding: 10px 20px; font-size: 18px; background: #4CAF50; color: white; border: none;">Proceed to Checkout</button>
+            <div>
+                <button ng-if="pendingTablePayment" ng-click="goToPayment(getGrandTotal() + getTablePrice(), 'combined_order')">Pay Table + Food ({{ getGrandTotal() + getTablePrice() | currency:'₹' }})</button>
+                <button ng-if="!pendingTablePayment" ng-click="goToPayment(getGrandTotal(), 'food_order')">Proceed to Checkout</button>
             </div>
         </div>
     </section>
 
 
     <!-- 6. PAYMENT MODULE VIEW (Goutham's Part) -->
-    <section class="section-container" id="payment-view" ng-if="currentView === 'payment'" style="padding: 40px; text-align: center;">
+    <section id="payment-view" ng-if="currentView === 'payment'">
         
         <!-- Processing Loader -->
-        <div ng-if="isProcessingPayment" style="padding: 40px;">
-            <div class="loader" style="border: 6px solid #f3f3f3; border-top: 6px solid #4CAF50; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-            <h3 style="margin-top: 20px; color: #333;">Processing Payment...</h3>
-            <style>
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
+        <div ng-if="isProcessingPayment">
+            <div></div>
+            <h3>Processing Payment...</h3>
         </div>
         
         <!-- Payment Form -->
@@ -217,28 +200,28 @@
             
             <h3>Total Amount: {{ amountToPay | currency:'₹' }}</h3>
             
-            <div style="margin: 20px 0;">
+            <div>
                 <p>Select Payment Method:</p>
                 <label><input type="radio" name="payment_method" value="card" checked> Credit/Debit Card</label>
                 <label><input type="radio" name="payment_method" value="upi"> UPI</label>
             </div>
             
-            <div style="margin: 20px 0;">
-                <input type="text" ng-model="dummyPaymentDetails" placeholder="Enter Payment Details (Dummy)" style="padding: 10px; width: 250px;">
+            <div>
+                <input type="text" ng-model="dummyPaymentDetails" placeholder="Enter Payment Details (Dummy)">
             </div>
             
-            <button ng-click="completePayment()" style="padding: 10px 30px; font-size: 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Pay Now</button>
-            <button ng-click="switchView('dashboard')" style="padding: 10px 30px; font-size: 16px; margin-left: 10px; cursor: pointer;">Cancel</button>
+            <button ng-click="completePayment()">Pay Now</button>
+            <button ng-click="switchView('dashboard')">Cancel</button>
         </div>
         
         <!-- Success Message -->
-        <div ng-if="paymentSuccess" style="color: green; font-size: 24px; padding: 40px;">
+        <div ng-if="paymentSuccess">
             <h2>Payment Successful!</h2>
             <p ng-if="paymentContext === 'table_reservation'">Your table has been reserved. See you soon!</p>
             <p ng-if="paymentContext === 'food_order'">Your food order has been placed and is being prepared!</p>
             <p ng-if="paymentContext === 'combined_order'">Your table is reserved and food is pre-ordered. See you soon!</p>
             
-            <button ng-click="switchView('dashboard')" style="margin-top: 20px; padding: 10px 20px;">Return to Dashboard</button>
+            <button ng-click="switchView('dashboard')">Return to Dashboard</button>
         </div>
         
     </section>
