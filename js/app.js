@@ -1,32 +1,50 @@
-var app = angular.module('restaurantApp', []);
+var app = angular.module('RestaurantApp', []);
 
-app.controller('CartController', ['$scope', function($scope) {
-    // Shared cart array for selected food items
+app.controller('MainController', ['$scope', '$timeout', function($scope, $timeout) {
+    // ==== GLOBAL STATE & NAVIGATION ====
+    $scope.currentView = 'dashboard';
+    $scope.pendingTablePayment = false;
+    
+    $scope.switchView = function(view) {
+        $scope.currentView = view;
+        window.scrollTo(0, 0);
+    };
+
+    $scope.startPreOrder = function() {
+        $scope.pendingTablePayment = true;
+        $scope.switchView('menu');
+    };
+
+    // ==== GOUTHAM: FOOD MENU DATA ====
+    $scope.menuItems = [
+        { id: 101, name: 'Truffle & Wild Mushroom Risotto', category: 'Main Course', price: 2800, type: 'Veg', available: true, quantity: 1, image: 'images/risotto.jpg', isSpecial: true, prepTime: 35 },
+        { id: 102, name: 'A5 Wagyu Beef Steak', category: 'Main Course', price: 8500, type: 'Non-Veg', available: true, quantity: 1, image: 'images/wagyu.jpg', isSpecial: true, prepTime: 45 },
+        { id: 103, name: 'Lobster Thermidor', category: 'Main Course', price: 5200, type: 'Non-Veg', available: true, quantity: 1, image: 'images/lobster.jpg', isSpecial: false, prepTime: 40 },
+        { id: 104, name: 'Beluga Caviar with Blinis', category: 'Starter', price: 9500, type: 'Non-Veg', available: true, quantity: 1, image: 'images/caviar.jpg', isSpecial: true, prepTime: 15 },
+        { id: 105, name: 'Pan-Seared Foie Gras', category: 'Starter', price: 3200, type: 'Non-Veg', available: true, quantity: 1, image: 'images/foie-gras.jpg', isSpecial: false, prepTime: 20 },
+        { id: 106, name: 'Saffron Panna Cotta', category: 'Dessert', price: 1500, type: 'Veg', available: true, quantity: 1, image: 'images/panna-cotta.jpg', isSpecial: false, prepTime: 10 },
+        { id: 107, name: 'Gold Leaf Chocolate Ganache', category: 'Dessert', price: 2100, type: 'Veg', available: true, quantity: 1, image: 'images/gold-chocolate.jpg', isSpecial: true, prepTime: 15 },
+        { id: 108, name: 'Vintage Dom Pérignon Champagne', category: 'Beverage', price: 18000, type: 'Veg', available: true, quantity: 1, image: 'images/champagne.jpg', isSpecial: true, prepTime: 5 },
+        { id: 109, name: 'Artisan Smoked Old Fashioned', category: 'Beverage', price: 1800, type: 'Veg', available: true, quantity: 1, image: 'images/old-fashioned.jpg', isSpecial: false, prepTime: 10 },
+        { id: 110, name: 'White Truffle Infused Martini', category: 'Beverage', price: 2200, type: 'Veg', available: false, quantity: 1, image: 'images/martini.jpg', isSpecial: false, prepTime: 5 }
+    ];
+
+    // ==== ANANTHU: CART / PRE-ORDER LOGIC ====
     $scope.cart = [];
-
-    // Add a food item to the cart or increase quantity if already present
-    $scope.addToCart = function(food) {
-        var existingItem = $scope.cart.find(function(item) {
-            return item.name === food.name;
-        });
-
+    
+    $scope.addToCart = function(item) {
+        if (!item.available) return;
+        var existingItem = $scope.cart.find(function(cartItem) { return cartItem.id === item.id; });
         if (existingItem) {
-            existingItem.quantity += 1;
+            existingItem.quantity += item.quantity;
         } else {
-            $scope.cart.push({
-                name: food.name,
-                price: food.price,
-                quantity: 1
-            });
+            $scope.cart.push(angular.copy(item));
         }
+        item.quantity = 1; // Reset input field
+        alert(item.name + " added to your cart!");
     };
 
-    // Increase the quantity of a cart item
-    $scope.increaseQty = function(item) {
-        item.quantity += 1;
-    };
-
-    // Decrease the quantity, or remove the item if quantity reaches zero
+    $scope.increaseQty = function(item) { item.quantity += 1; };
     $scope.decreaseQty = function(item) {
         if (item.quantity > 1) {
             item.quantity -= 1;
@@ -34,162 +52,67 @@ app.controller('CartController', ['$scope', function($scope) {
             $scope.removeItem(item);
         }
     };
-
-    // Remove an item from the cart entirely
     $scope.removeItem = function(item) {
         var index = $scope.cart.indexOf(item);
-        if (index > -1) {
-            $scope.cart.splice(index, 1);
-        }
+        if (index > -1) $scope.cart.splice(index, 1);
     };
-
-    // Calculate total for a single cart item
-    $scope.getItemTotal = function(item) {
-        return item.price * item.quantity;
-    };
-
-    // Calculate the running grand total for the whole cart
+    $scope.getItemTotal = function(item) { return item.price * item.quantity; };
     $scope.getGrandTotal = function() {
-        return $scope.cart.reduce(function(sum, item) {
-            return sum + item.price * item.quantity;
-        }, 0);
+        return $scope.cart.reduce(function(sum, item) { return sum + item.price * item.quantity; }, 0);
     };
 
-var app = angular.module('RestaurantApp', []);
+    $scope.getMaxPrepTime = function() {
+        if ($scope.cart.length === 0) return 0;
+        return Math.max.apply(Math, $scope.cart.map(function(item) { return item.prepTime; }));
+    };
 
-app.controller('MainController', ['$scope', function($scope,$timeout) {
-  
-    $scope.currentView = 'dashboard';
-    $scope.paymentSuccess = false;
-    $scope.isProcessingPayment = false;
-  
-    $scope.menuItems = [
-        {
-            id: 1,
-            name: 'Margherita Pizza',
-            category: 'Main Course',
-            price: 299,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/pizza.jpg'
-        },
-        {
-            id: 2,
-            name: 'Chicken Burger',
-            category: 'Main Course',
-            price: 249,
-            type: 'Non-Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/burger.jpg'
-        },
-        {
-            id: 3,
-            name: 'Pasta Alfredo',
-            category: 'Main Course',
-            price: 329,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/pasta.jpg'
-        },
-        {
-            id: 4,
-            name: 'French Fries',
-            category: 'Starter',
-            price: 149,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/fries.jpg'
-        },
-        {
-            id: 5,
-            name: 'Garlic Bread',
-            category: 'Starter',
-            price: 129,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/garlic-bread.jpg'
-        },
-        {
-            id: 6,
-            name: 'Brownie',
-            category: 'Dessert',
-            price: 179,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/brownie.jpg'
-        },
-        {
-            id: 7,
-            name: 'Ice Cream',
-            category: 'Dessert',
-            price: 149,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/ice-cream.jpg'
-        },
-        {
-            id: 8,
-            name: 'Mojito',
-            category: 'Beverage',
-            price: 99,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/mojito.jpg'
-        },
-        {
-            id: 9,
-            name: 'Cold Coffee',
-            category: 'Beverage',
-            price: 129,
-            type: 'Veg',
-            available: true,
-            quantity: 1,
-            image: 'images/cold-coffee.jpg'
-        },
-        {
-            id: 10,
-            name: 'Fresh Lime Soda',
-            category: 'Beverage',
-            price: 89,
-            type: 'Veg',
-            available: false,
-            quantity: 1,
-            image: 'images/lime-soda.jpg'
-        }
-    ];
-
-    $scope.cart = [];
-
-    $scope.addToCart = function(item) {
-        if (!item.available) return;
-
-        var existingItem = $scope.cart.find(function(cartItem) {
-            return cartItem.id === item.id;
-        });
-
-        if (existingItem) {
-            existingItem.quantity += item.quantity;
-        } else {
-            var itemToAdd = angular.copy(item);
-            $scope.cart.push(itemToAdd);
+    $scope.getWaitTimeMessage = function() {
+        var maxPrep = $scope.getMaxPrepTime();
+        if (maxPrep === 0) return "";
+        
+        if (!$scope.pendingTablePayment || !$scope.submittedData || !$scope.submittedData.date || !$scope.submittedData.time) {
+            return "Estimated Preparation Time: " + maxPrep + " mins";
         }
         
-        item.quantity = 1;
+        try {
+            var arrivalDate = new Date($scope.submittedData.date);
+            var timeObj = new Date($scope.submittedData.time);
+            
+            if (!isNaN(timeObj.getTime())) {
+                arrivalDate.setHours(timeObj.getHours(), timeObj.getMinutes(), 0, 0);
+            } else {
+                var parts = $scope.submittedData.time.toString().split(':');
+                arrivalDate.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+            }
+            
+            var now = new Date();
+            var diffMs = arrivalDate - now;
+            var minutesUntilArrival = Math.floor(diffMs / 60000);
+            
+            if (minutesUntilArrival < 0) {
+                return "Estimated Prep Time: " + maxPrep + " mins."; 
+            }
+            
+            if (maxPrep > minutesUntilArrival) {
+                var waitTime = maxPrep - minutesUntilArrival;
+                return "Prep Time: " + maxPrep + " mins. You arrive in " + minutesUntilArrival + " mins. You will need to wait approx " + waitTime + " mins at the table.";
+            } else {
+                return "Prep Time: " + maxPrep + " mins. Your food will be ready exactly when you arrive!";
+            }
+        } catch(e) {
+            return "Estimated Preparation Time: " + maxPrep + " mins";
+        }
     };
 
+    // ==== GOUTHAM: PAYMENT MODULE LOGIC ====
+    $scope.paymentSuccess = false;
+    $scope.isProcessingPayment = false;
+    
     $scope.goToPayment = function(price, context) {
         $scope.amountToPay = price;
         $scope.paymentContext = context;
         $scope.paymentSuccess = false;
-        $scope.currentView = 'payment';
+        $scope.switchView('payment');
     };
 
     $scope.completePayment = function() {
@@ -198,57 +121,24 @@ app.controller('MainController', ['$scope', function($scope,$timeout) {
         $timeout(function() {
             $scope.isProcessingPayment = false;
             $scope.paymentSuccess = true;
-            $scope.dummyPaymentDetails = ''; // Clear the form input
+            $scope.dummyPaymentDetails = ''; // Clear form
+            
+            // If paying for food, optionally clear the cart after success
+            if ($scope.paymentContext === 'food_order' || $scope.paymentContext === 'combined_order') {
+                $scope.cart = [];
+            }
+            
+            if ($scope.paymentContext === 'table_reservation' || $scope.paymentContext === 'combined_order') {
+                $scope.pendingTablePayment = false;
+            }
         }, 2000);
     };
-    
-    $scope.backToDashboard = function() {
-        $scope.currentView = 'dashboard';
-        $scope.paymentSuccess = false;
-    };
-});
-    
-    // Initialize Booking Summary data
-    $scope.initApp = function() {
-        $scope.restaurant = {
-            name: "Dine Ease",
-            fullName: "Dine Ease Fine Dining & Lounge"
-        };
 
-        // Booking visibility state (controls ng-show)
-        $scope.isBooked = true;
-
-        // Booking details object
-        $scope.bookingDetails = {
-            customerName: "John",
-            tableType: "Indoor",
-            date: new Date('2026-07-25T19:30:00'),
-            time: "7:30 PM",
-            guests: 4,
-            phone: "9876543210"
-        };
-
-        // Pre-ordered food items array
-        $scope.orderedItems = [
-            { name: "Pizza", qty: 2, price: 299 },
-            { name: "Burger", qty: 1, price: 249 },
-            { name: "Mojito", qty: 2, price: 99 }
-        ];
-
-        // Grand total
-        $scope.grandTotal = 1450;
-    };
-
-    // Helper method to toggle summary view
-    $scope.toggleSummary = function() {
-        $scope.isBooked = !$scope.isBooked;
-    // Initialize Reservation Form default values
-    // Initialize Dashboard datasets and properties
+    // ==== ADRIAN: DASHBOARD, RESERVATION & SUMMARY LOGIC ====
     $scope.initApp = function() {
         $scope.restaurant = {
             name: "Dine Ease",
             fullName: "Dine Ease Fine Dining & Lounge",
-            tagline: "Reserve Your Exclusive Dining Experience",
             tagline: "Experience Culinary Excellence",
             rating: "4.9",
             totalTables: 20,
@@ -256,128 +146,113 @@ app.controller('MainController', ['$scope', function($scope,$timeout) {
             banner: "assets/images/banner.jpg"
         };
 
-        // Dropdown options for ng-options
         $scope.tableTypes = [
-            { label: 'Indoor Dining (Air Conditioned)', value: 'Indoor' },
-            { label: 'Outdoor Garden Terrace', value: 'Outdoor' },
-            { label: 'Rooftop VIP Lounge', value: 'Rooftop' },
-            { label: 'Private Family Suite', value: 'Private Suite' }
+            { label: 'Indoor Dining (Air Conditioned) - ₹200/guest', value: 'Indoor', price: 200 },
+            { label: 'Outdoor Garden Terrace - ₹300/guest', value: 'Outdoor', price: 300 },
+            { label: 'Rooftop VIP Lounge - ₹500/guest', value: 'Rooftop', price: 500 },
+            { label: 'Private Family Suite - ₹800/guest', value: 'Private Suite', price: 800 }
         ];
 
-        // Reservation Form ng-model object
-        $scope.reservation = {
-            customerName: '',
-            email: '',
-            phone: '',
-            date: new Date(),
-            time: '19:30',
-            guests: 4,
-            tableType: 'Indoor'
+        $scope.getTablePrice = function() {
+            if (!$scope.submittedData) return 0;
+            var selected = $scope.tableTypes.find(function(t) {
+                return t.value === $scope.submittedData.tableType;
+            });
+            var basePrice = selected ? selected.price : 0;
+            return basePrice * $scope.submittedData.guests;
         };
 
-        $scope.isSubmitted = false;
-        $scope.submittedData = null;
+        $scope.resetForm();
     };
 
-    // Form submission handler using ng-submit
+    $scope.resetForm = function() {
+        $scope.isSubmitted = false;
+        $scope.submittedData = null;
+        $scope.isBooked = false;
+        $scope.pendingTablePayment = false;
+        
+        $scope.reservation = {
+            customerName: '', email: '', phone: '',
+            date: new Date(), time: new Date(1970, 0, 1, 19, 30, 0),
+            guests: 4, tableType: 'Indoor'
+        };
+        
+        $scope.reservedTablesCount = 5; // Dummy dynamic data
+        
+        $scope.todaysSpecialStyle = {
+            'border-top': '4px solid #F4C430',
+            'background': 'linear-gradient(135deg, #ffffff 0%, #fffdf0 100%)'
+        };
+    };
+
+    // Handle Form Submission (Table Reservation)
     $scope.reserveTable = function(form) {
         if (form && form.$invalid) {
             alert('Please complete all required fields correctly before submitting!');
             return;
         }
-
+        
         // Save submitted reservation data
         $scope.submittedData = angular.copy($scope.reservation);
         $scope.isSubmitted = true;
-    };
-
-    // Reset form for a new reservation
-    $scope.resetForm = function() {
-        $scope.isSubmitted = false;
-        $scope.submittedData = null;
+        $scope.isBooked = true;
+        
+        // Clear the form inputs for the next time
         $scope.reservation = {
-            customerName: '',
-            email: '',
-            phone: '',
-            date: new Date(),
-            time: '19:30',
-            guests: 4,
-            tableType: 'Indoor'
+            customerName: '', email: '', phone: '',
+            date: new Date(), time: new Date(1970, 0, 1, 19, 30, 0),
+            guests: 4, tableType: 'Indoor'
         };
-        $scope.reservedTablesCount = 5;
-
-        // Dynamic style for Today's Special card (ng-style)
-        $scope.todaysSpecialStyle = {
-            'border-top': '4px solid #F4C430',
-            'background': 'linear-gradient(135deg, #ffffff 0%, #fffdf0 100%)'
-        };
-
-        // Menu items array for calculating total items & Today's Special count
-        $scope.menuItems = [
-            { id: 101, name: 'Margherita Pizza', isSpecial: true },
-            { id: 102, name: 'Chicken Burger', isSpecial: false },
-            { id: 103, name: 'Pasta Alfredo', isSpecial: true },
-            { id: 104, name: 'French Fries', isSpecial: false },
-            { id: 105, name: 'Garlic Bread', isSpecial: false },
-            { id: 106, name: 'Brownie', isSpecial: true },
-            { id: 107, name: 'Ice Cream', isSpecial: false },
-            { id: 108, name: 'Mojito', isSpecial: false },
-            { id: 109, name: 'Cold Coffee', isSpecial: false },
-            { id: 110, name: 'Fresh Lime Soda', isSpecial: false }
-        ];
+        if (form) {
+            form.$setPristine();
+            form.$setUntouched();
+        }
+        
+        // Take them to the booking summary screen
+        $scope.switchView('summary');
     };
 
-    // Calculate Available Tables dynamically for Dashboard (Adrian)
-    $scope.getAvailableTables = function() {
-        return $scope.restaurant.totalTables - $scope.reservedTablesCount;
+    // Dashboard dynamic calculators
+    $scope.getAvailableTables = function() { 
+        return $scope.restaurant.totalTables - $scope.reservedTablesCount; 
     };
-
-    // Calculate Today's Special Items count
+    
     $scope.getTodaysSpecialCount = function() {
         if (!$scope.menuItems) return 0;
         return $scope.menuItems.filter(function(item) { return item.isSpecial; }).length;
     };
 
-    // Dashboard Cards Array for ng-repeat with images (Adrian)
+    // Dashboard Cards setup
     $scope.getDashboardCards = function() {
         return [
             {
                 title: 'Available Tables',
                 value: $scope.getAvailableTables(),
                 subtitle: 'Out of ' + $scope.restaurant.totalTables + ' total tables',
-                icon: 'fa-chair',
-                badge: 'Live',
-                image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80',
                 cardStyle: { 'border-top': '4px solid #C62828' }
             },
             {
                 title: "Today's Special",
                 value: $scope.getTodaysSpecialCount() + ' Dishes',
                 subtitle: 'Chef Recommended Items',
-                icon: 'fa-star',
-                badge: 'Featured',
-                image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=600&q=80',
                 cardStyle: $scope.todaysSpecialStyle
             },
             {
                 title: 'Customer Rating',
                 value: $scope.restaurant.rating + ' / 5.0',
                 subtitle: 'Based on 450+ reviews',
-                icon: 'fa-heart',
-                badge: 'Top Rated',
-                image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
                 cardStyle: { 'border-top': '4px solid #4CAF50' }
             },
             {
                 title: 'Total Menu Items',
                 value: $scope.menuItems ? $scope.menuItems.length : 0,
                 subtitle: 'Starters, Mains & Drinks',
-                icon: 'fa-utensils',
-                badge: 'Fresh',
-                image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
                 cardStyle: { 'border-top': '4px solid #2196F3' }
             }
         ];
     };
+
+    // Initialize application on load
+    $scope.initApp();
 
 }]);
