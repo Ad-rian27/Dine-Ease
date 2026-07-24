@@ -1,234 +1,1215 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="RestaurantApp">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Table Reservation & Food Pre-Ordering</title>
+    <title>Dine Ease - Table Reservation & Food Pre-Ordering POS</title>
+
+    <!-- Hugeicons Webfont CDN -->
+    <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
+    <!-- FontAwesome 6 Brands CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link rel="stylesheet" href="css/style.css">
-    
+
     <!-- AngularJS -->
     <script src="node_modules/angular/angular.min.js"></script>
     <script src="js/app.js"></script>
 </head>
+
 <body ng-controller="MainController">
 
-    <!-- Global Navigation -->
-    <nav>
-        <h2>{{ restaurant.name }}</h2>
-        <button ng-click="switchView('dashboard')">Dashboard</button>
-        <button ng-click="switchView('reservation')">Book Table</button>
-        <button ng-click="switchView('menu')">Food Menu</button>
-        <button ng-click="switchView('cart')">Pre-Order Cart ({{ cart.length }})</button>
-    </nav>
+    <div class="app-wrapper">
 
-    <!-- 1. DASHBOARD VIEW (Adrian's Part) -->
-    <section ng-if="currentView === 'dashboard'">
-        <h1>Welcome to {{ restaurant.fullName }}</h1>
-        <p><em>{{ restaurant.tagline }}</em></p>
-        
-        <div>
-            <div ng-repeat="card in getDashboardCards()">
-                <h3>{{ card.title }}</h3>
-                <p>{{ card.value }}</p>
-                <p>{{ card.subtitle }}</p>
+        <!-- App Header Navbar -->
+        <header class="app-header">
+            <div class="header-container">
+                <div class="brand-logo" ng-click="switchView('dashboard')">
+                    <div class="logo-icon"><i class="hgi-stroke hgi-restaurant-01 icon-md"></i></div>
+                    <div class="brand-name">Dine Ease</div>
+                </div>
+
+                <!-- Navigation Links with Hugeicons -->
+                <nav class="nav-links">
+                    <button class="nav-btn" ng-class="{active: currentView === 'dashboard'}"
+                        ng-click="switchView('dashboard')">
+                        <i class="hgi-stroke hgi-dashboard-square-01 icon-sm"></i> Dashboard
+                    </button>
+                    <button class="nav-btn" ng-class="{active: currentView === 'reservation' || currentView === 'summary'}"
+                        ng-click="switchView('reservation')">
+                        <i class="hgi-stroke hgi-restaurant-table icon-sm"></i> Book Table
+                    </button>
+                    <button class="nav-btn" ng-class="{active: currentView === 'menu' || currentView === 'cart'}"
+                        ng-click="switchView('menu')">
+                        <i class="hgi-stroke hgi-menu-restaurant icon-sm"></i> Food Menu
+                    </button>
+                    <button class="nav-btn" ng-class="{active: currentView === 'orders'}"
+                        ng-click="switchView('orders')">
+                        <i class="hgi-stroke hgi-clock-01 icon-sm"></i> Order History <span class="badge"
+                            style="background: var(--accent-orange); color: white; border-radius: 9999px; padding: 2px 6px; font-size: 11px; margin-left: 4px;">{{
+                            orderHistory.length }}</span>
+                    </button>
+                    <button class="nav-btn" ng-class="{active: currentView === 'payment'}"
+                        ng-click="switchView('payment')" style="display: none;">
+                    </button>
+
+                    <!-- Cart Button — utility action, no active state, sits after Order History -->
+                    <span class="nav-pill-divider"></span>
+                    <button class="nav-btn nav-cart-pill"
+                        ng-click="switchView('menu')" title="View Cart — {{ cart.length }} item(s)">
+                        <i class="hgi-stroke hgi-shopping-cart-01 icon-sm"></i>
+                        <span ng-if="cart.length > 0" class="nav-cart-badge-inline">{{ cart.length }}</span>
+                    </button>
+                </nav>
+
+                <!-- Header Actions: Search Input -->
+                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                    <div class="header-search">
+                        <i class="hgi-stroke hgi-search-01 search-icon icon-sm"></i>
+                        <input type="text" ng-model="searchQuery" placeholder="Find food or beverages..."
+                            ng-change="searchQuery && switchView('menu')">
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>
+        </header>
 
 
-    <!-- 2. TABLE RESERVATION VIEW (Adrian's Part) -->
-    <section ng-if="currentView === 'reservation'">
-        <h2>Reserve a Table</h2>
-        
-        <form name="reservationForm" ng-submit="reserveTable(reservationForm)" novalidate>
-            <div>
-                <label>Name:</label>
-                <input type="text" ng-model="reservation.customerName" required>
-            </div>
-            
-            <div>
-                <label>Table Type:</label>
-                <select ng-model="reservation.tableType" ng-options="option.value as option.label for option in tableTypes" required></select>
-            </div>
-            
-            <div>
-                <label>Date & Time:</label>
-                <input type="date" ng-model="reservation.date" required>
-                <input type="time" ng-model="reservation.time" required>
-            </div>
-            
-            <div>
-                <label>Guests:</label>
-                <input type="number" ng-model="reservation.guests" min="1" max="20" required>
-            </div>
-            
-            <button type="submit" ng-disabled="reservationForm.$invalid">Submit Reservation</button>
-        </form>
-    </section>
+        <!-- DASHBOARD LANDING VIEW -->
+        <div class="full-width-content" ng-if="currentView === 'dashboard'">
 
-
-    <!-- 3. BOOKING SUMMARY VIEW (Adrian's Part) -->
-    <section ng-if="currentView === 'summary'">
-        <h2>Booking Successful!</h2>
-        
-        <div>
-            <p><strong>Customer Name:</strong> {{ submittedData.customerName }}</p>
-            <p><strong>Table Type:</strong> {{ submittedData.tableType }}</p>
-            <p><strong>Date:</strong> {{ submittedData.date | date:'longDate' }}</p>
-            <p><strong>Time:</strong> {{ submittedData.time }}</p>
-            <p><strong>Guests:</strong> {{ submittedData.guests }}</p>
-        </div>
-        
-        <div>
-            <h3>Would you like to Pre-Order Food?</h3>
-            <p>Pre-order your meal now so it's ready exactly when you arrive!</p>
-            <div>
-                <button ng-click="startPreOrder()">Yes, Browse Menu</button>
-                <button ng-click="goToPayment(getTablePrice(), 'table_reservation')">No, Just Pay Booking Fee ({{ getTablePrice() | currency:'₹' }})</button>
-            </div>
-        </div>
-    </section>
-
-
-    <!-- 4. FOOD MENU VIEW (Goutham's Part) -->
-    <section id="food-menu" ng-if="currentView === 'menu'">
-        <h2>Our Menu</h2>
-        
-        <div>
-            <div ng-repeat="item in menuItems">
-                <img ng-src="{{ item.image }}" alt="{{ item.name }}">
-                
+            <!-- Hero Banner Refined -->
+            <div class="dashboard-hero-refined">
                 <div>
-                    <h3>{{ item.name }}</h3>
-                    <p>Category: {{ item.category }}</p>
-                    <p>Prep Time: {{ item.prepTime }} mins</p>
-                    <p>Price: {{ item.price | currency:'₹' }}</p>
-                    
-                    <span>
-                        {{ item.type }}
+                    <h1 style="font-size: 30px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px;">Welcome
+                        to {{ restaurant.fullName }}</h1>
+                    <p style="color: #94a3b8; font-size: 15px;">{{ restaurant.tagline }} — Reserve tables, pre-order
+                        fine cuisine, and experience culinary excellence.</p>
+
+                    <div class="hero-stats-row">
+                        <span class="hero-stat-pill"><i class="hgi-stroke hgi-star icon-sm" style="color: #eab308;"></i>
+                            4.9 Rating</span>
+                        <span class="hero-stat-pill"><i class="hgi-stroke hgi-time-01 icon-sm"
+                                style="color: #10b981;"></i> ~15m Avg Prep</span>
+                        <span class="hero-stat-pill"><i class="hgi-stroke hgi-restaurant-table icon-sm"
+                                style="color: #3b82f6;"></i> {{ getAvailableTables() }} Open Tables</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; z-index: 1;">
+                    <button class="btn-primary-cta"
+                        style="width: auto; padding: 12px 24px; background: white; color: var(--primary);"
+                        ng-click="switchView('menu')">
+                        <i class="hgi-stroke hgi-menu-restaurant icon-sm" style="margin-right: 6px;"></i> Browse Menu
+                        POS
+                    </button>
+                    <button class="pill-btn"
+                        style="padding: 12px 24px; border-color: rgba(255,255,255,0.3); color: white;"
+                        ng-click="switchView('reservation')">
+                        <i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 6px;"></i> Book a Table
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Metrics Grid -->
+            <div class="section-header">
+                <h2 class="section-title">Restaurant Overview</h2>
+            </div>
+            <div class="dashboard-metrics-grid">
+                <div class="metric-card" ng-repeat="card in getDashboardCards()"
+                    ng-style="{'border-top': '4px solid ' + card.accentColor}">
+                    <div class="metric-icon-box" ng-style="{'color': card.accentColor}">
+                        <i class="hgi-stroke icon-lg" ng-class="card.hugeicon"></i>
+                    </div>
+                    <div class="metric-details">
+                        <h3>{{ card.title }}</h3>
+                        <div class="metric-value">{{ card.value }}</div>
+                        <div class="metric-subtitle">{{ card.subtitle }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Split Section: Chef Specials Grid + Reviews & Hours -->
+            <div class="dashboard-sections-split">
+
+                <!-- Left: Featured Chef Specials -->
+                <div>
+                    <div class="section-header">
+                        <h2 class="section-title">Today's Chef Specials (15% OFF)</h2>
+                        <a href="" class="view-all-link" ng-click="switchView('menu')">
+                            View Full Menu <i class="hgi-stroke hgi-arrow-right-01 icon-sm"></i>
+                        </a>
+                    </div>
+
+                    <div class="menu-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                        <div class="food-card" ng-repeat="item in getSpecialOffers()">
+                            <div class="special-img-box">
+                                <img ng-src="{{ item.image }}" alt="{{ item.name }}">
+                                <span class="stock-badge">Available: {{ item.availableCount }}</span>
+                                <span class="diet-badge-pill"
+                                    ng-class="{'veg': item.type === 'Veg', 'non-veg': item.type === 'Non-Veg'}">
+                                    <i class="hgi-stroke icon-sm"
+                                        ng-class="{'hgi-leaf-01': item.type === 'Veg', 'hgi-fire': item.type === 'Non-Veg'}"></i>
+                                    {{ item.type }}
+                                </span>
+                            </div>
+
+                            <h3 class="food-title">{{ item.name }}</h3>
+                            <span class="food-subtext"
+                                style="display: flex; align-items: center; justify-content: space-between;">
+                                <span>Price per portion</span>
+                                <span><i class="hgi-stroke hgi-clock-01 icon-sm"></i> {{ item.prepTime }}m</span>
+                            </span>
+
+                            <div class="card-bottom">
+                                <div>
+                                    <span class="discount-tag" style="display: block; font-size: 11px;">{{ item.discount
+                                        }}</span>
+                                    <span class="food-price">{{ item.price | currency:'₹' }}</span>
+                                </div>
+                                <button class="btn-order-single" ng-click="addToCart(item); switchView('menu')">
+                                    + Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Testimonials & Opening Hours Widget -->
+                <div>
+                    <!-- Opening Hours Widget -->
+                    <div class="sidebar-card" style="margin-bottom: 20px;">
+                        <div class="sidebar-title-row">
+                            <h3 class="sidebar-title">Dining Hours & Status</h3>
+                            <span class="hours-status-badge">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"></i> Open Now
+                            </span>
+                        </div>
+                        <div
+                            style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+                            <div><strong>Lunch:</strong> {{ restaurantHours.lunch }}</div>
+                            <div><strong>Dinner:</strong> {{ restaurantHours.dinner }}</div>
+                            <div
+                                style="margin-top: 4px; border-top: 1px solid var(--border-color); padding-top: 8px; font-size: 12px; color: var(--text-light);">
+                                <i class="hgi-stroke hgi-restaurant-02 icon-sm"></i> {{ restaurantHours.address }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Reviews -->
+                    <div class="sidebar-card">
+                        <div class="sidebar-title-row">
+                            <h3 class="sidebar-title">Customer Reviews</h3>
+                            <span style="font-size: 12px; color: #eab308; font-weight: 700;">★ 4.9</span>
+                        </div>
+
+                        <div class="testimonial-card" ng-repeat="rev in testimonials">
+                            <div class="testimonial-author">
+                                <span>{{ rev.author }}</span>
+                                <span class="testimonial-dish">{{ rev.dish }}</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">"{{ rev.comment }}"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOD MENU / POS VIEW (Full Width Grid System) -->
+        <div class="main-layout" ng-if="currentView === 'menu' || currentView === 'cart'">
+
+            <!-- Left Main Content Section -->
+            <main class="left-content">
+
+                <!-- Special Discount Today Carousel/Grid -->
+                <section class="section-header" ng-if="!searchQuery && selectedCategory === 'All'">
+                    <h2 class="section-title">Special Discount Today</h2>
+                    <span class="section-badge">
+                        <i class="hgi-stroke hgi-time-01 icon-sm" style="margin-right: 4px;"></i> Ends in 12 : 10 : 09
                     </span>
-                    
-                    <p>
-                        <span ng-if="item.available">Available</span>
-                        <span ng-if="!item.available">Out of Stock</span>
+                </section>
+
+                <div class="specials-carousel-row" ng-if="!searchQuery && selectedCategory === 'All'">
+                    <div class="special-card" ng-repeat="item in getSpecialOffers()">
+                        <div class="special-img-box">
+                            <img ng-src="{{ item.image }}" alt="{{ item.name }}">
+                            <span class="stock-badge">Available: {{ item.availableCount }}</span>
+                            <span class="diet-badge-pill"
+                                ng-class="{'veg': item.type === 'Veg', 'non-veg': item.type === 'Non-Veg'}">
+                                <i class="hgi-stroke icon-sm"
+                                    ng-class="{'hgi-leaf-01': item.type === 'Veg', 'hgi-fire': item.type === 'Non-Veg'}"></i>
+                                {{ item.type }}
+                            </span>
+                        </div>
+                        <div class="special-info">
+                            <h4>{{ item.name }}</h4>
+                            <div class="price-row" style="justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="discount-tag">{{ item.discount }}</span>
+                                    <span class="original-price">{{ item.originalPrice | currency:'₹' }}</span>
+                                </div>
+                                <span
+                                    style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px;">
+                                    <i class="hgi-stroke hgi-clock-01 icon-sm"></i> {{ item.prepTime }}m
+                                </span>
+                            </div>
+                            <div class="card-bottom">
+                                <span class="current-price">{{ item.price | currency:'₹' }}</span>
+
+                                <div class="stepper-container" ng-if="getItemInCart(item.id)">
+                                    <button class="btn-step" ng-click="decreaseCardQty(item)"
+                                        title="Decrease quantity"><i
+                                            class="hgi-stroke hgi-minus-sign icon-sm"></i></button>
+                                    <span class="step-count">{{ getItemInCart(item.id).quantity }}</span>
+                                    <button class="btn-step" ng-click="increaseCardQty(item)"
+                                        title="Increase quantity"><i class="hgi-stroke hgi-add-01 icon-sm"></i></button>
+                                </div>
+
+                                <button class="btn-order-single" ng-if="!getItemInCart(item.id) && item.available"
+                                    ng-click="addToCart(item)">
+                                    <i class="hgi-stroke hgi-add-01 icon-sm"></i> Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Explore Our Best Menu Header & Category Pills -->
+                <section class="section-header">
+                    <h2 class="section-title">Explore Our Best Menu</h2>
+                    <a href="" class="view-all-link" ng-click="selectCategory('All')">View All</a>
+                </section>
+
+                <!-- Category Pill Buttons with Hugeicons -->
+                <div class="category-pills">
+                    <button class="pill-btn" ng-repeat="cat in categories" ng-class="{active: selectedCategory === cat}"
+                        ng-click="selectCategory(cat)">
+                        <i class="hgi-stroke icon-sm" style="margin-right: 6px;" ng-class="{
+                            'hgi-grid-view': cat === 'All',
+                            'hgi-dish-01': cat === 'Main Course',
+                            'hgi-fire': cat === 'Starter',
+                            'hgi-cheese-cake-01': cat === 'Dessert',
+                            'hgi-drink': cat === 'Beverage',
+                            'hgi-star': cat === 'Specials'
+                        }"></i>
+                        {{ cat }}
+                    </button>
+                </div>
+
+                <!-- Food Cards Grid -->
+                <div class="menu-grid">
+                    <div class="food-card" ng-repeat="item in getFilteredMenuItems()">
+                        <div class="food-img-container">
+                            <img ng-src="{{ item.image }}" alt="{{ item.name }}">
+                            <span class="stock-badge">Available: {{ item.availableCount }}</span>
+                            <span class="diet-badge-pill"
+                                ng-class="{'veg': item.type === 'Veg', 'non-veg': item.type === 'Non-Veg'}">
+                                <i class="hgi-stroke icon-sm"
+                                    ng-class="{'hgi-leaf-01': item.type === 'Veg', 'hgi-fire': item.type === 'Non-Veg'}"></i>
+                                {{ item.type }}
+                            </span>
+                        </div>
+
+                        <h3 class="food-title">{{ item.name }}</h3>
+                        <span class="food-subtext"
+                            style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>Price per portion</span>
+                            <span><i class="hgi-stroke hgi-clock-01 icon-sm"></i> {{ item.prepTime }}m</span>
+                        </span>
+
+                        <div class="card-bottom">
+                            <span class="food-price">{{ item.price | currency:'₹' }}</span>
+
+                            <!-- Stepper Control if in cart -->
+                            <div class="stepper-container" ng-if="getItemInCart(item.id)">
+                                <button class="btn-step" ng-click="decreaseCardQty(item)" title="Decrease quantity"><i
+                                        class="hgi-stroke hgi-minus-sign icon-sm"></i></button>
+                                <span class="step-count">{{ getItemInCart(item.id).quantity }}</span>
+                                <button class="btn-step" ng-click="increaseCardQty(item)" title="Increase quantity"><i
+                                        class="hgi-stroke hgi-add-01 icon-sm"></i></button>
+                            </div>
+
+                            <!-- Single Order Button if not in cart -->
+                            <button class="btn-order-single" ng-if="!getItemInCart(item.id) && item.available"
+                                ng-click="addToCart(item)">
+                                <i class="hgi-stroke hgi-add-01 icon-sm"></i> Order
+                            </button>
+
+                            <button class="btn-out-of-stock" ng-if="!item.available">Out of Stock</button>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+
+            <!-- Right Side Panel: Customer Information & Order Summary Sidebar -->
+            <aside class="right-sidebar">
+
+                <!-- Customer Information Card -->
+                <div class="sidebar-card">
+                    <div class="sidebar-title-row">
+                        <h3 class="sidebar-title">Customer Information</h3>
+                        <i class="hgi-stroke hgi-information-circle info-icon icon-md"
+                            title="Guest reservation details"></i>
+                    </div>
+
+                    <div class="customer-input-field">
+                        <label><i class="hgi-stroke hgi-user icon-sm" style="margin-right: 4px;"></i> Customer
+                            Name</label>
+                        <input type="text" ng-model="reservation.customerName" placeholder="Enter name">
+                    </div>
+
+                    <div class="customer-input-field" style="margin-bottom: 0;">
+                        <label><i class="hgi-stroke hgi-user-group icon-sm" style="margin-right: 4px;"></i> Table
+                            Guests</label>
+                        <input type="number" ng-model="reservation.guests" min="1" max="20" class="custom-input"
+                            placeholder="Number of guests">
+                    </div>
+                </div>
+
+
+                <!-- Current Order Section -->
+                <div class="sidebar-card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="sidebar-title-row">
+                        <h3 class="sidebar-title">Current Order</h3>
+                        <span style="font-size: 12px; color: var(--text-light); font-weight: 600;">{{ cart.length }}
+                            items</span>
+                    </div>
+
+                    <div class="cart-items-list" ng-if="cart.length > 0">
+                        <div class="cart-item-row" ng-repeat="item in cart">
+                            <img ng-src="{{ item.image }}" alt="{{ item.name }}" class="cart-item-img">
+                            <div class="cart-item-info">
+                                <div class="cart-item-name">{{ item.name }}</div>
+                                <div class="cart-item-price">{{ item.price | currency:'₹' }}</div>
+                            </div>
+                            <div class="cart-item-actions">
+                                <div class="stepper-container">
+                                    <button class="btn-step" ng-click="decreaseQty(item)" title="Decrease quantity"><i
+                                            class="hgi-stroke hgi-minus-sign icon-sm"></i></button>
+                                    <span class="step-count">{{ item.quantity }}</span>
+                                    <button class="btn-step" ng-click="increaseQty(item)" title="Increase quantity"><i
+                                            class="hgi-stroke hgi-add-01 icon-sm"></i></button>
+                                </div>
+                                <button class="btn-trash" ng-click="removeItem(item)" title="Remove item">
+                                    <i class="hgi-stroke hgi-delete-02 icon-md"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-cart-state" ng-if="cart.length === 0">
+                        <i class="hgi-stroke hgi-shopping-cart-01 icon-xl"
+                            style="display: block; margin: 0 auto 10px auto; color: var(--text-light);"></i>
+                        <p>Your pre-order cart is empty.</p>
+                        <p style="font-size: 12px; color: var(--text-light); margin-top: 4px;">Select items from the
+                            menu to start ordering.</p>
+                    </div>
+
+                    <!-- Preparation Wait Banner -->
+                    <div ng-if="cart.length > 0"
+                        style="margin-top: 12px; padding: 10px 14px; background: #ecfdf5; border-radius: 8px; font-size: 12px; color: #065f46; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                        <i class="hgi-stroke hgi-time-01 icon-sm"></i> {{ getWaitTimeMessage() }}
+                    </div>
+
+                    <!-- Payment Summary Breakdown -->
+                    <div class="payment-summary-box" style="margin-top: auto;">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>{{ getGrandTotal() | currency:'₹' }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Taxes & GST (5%)</span>
+                            <span>{{ getTaxAmount() | currency:'₹' }}</span>
+                        </div>
+                        <div class="summary-row" ng-if="pendingTablePayment">
+                            <span>Table Booking Fee</span>
+                            <span>{{ getTablePrice() | currency:'₹' }}</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span class="total-amount-green">{{ getFinalPayableTotal() | currency:'₹' }}</span>
+                        </div>
+
+                        <button class="btn-primary-cta" ng-disabled="cart.length === 0 && !pendingTablePayment"
+                            ng-click="goToPayment()">
+                            Order Now
+                        </button>
+                    </div>
+                </div>
+
+            </aside>
+        </div>
+
+
+        <!-- TABLE RESERVATION VIEW (Refined 2-Column Layout) -->
+        <div class="full-width-content" ng-if="currentView === 'reservation'">
+            <div class="reservation-layout-split">
+
+                <!-- Left Main Form Card -->
+                <div class="reservation-card">
+                    <h2 class="section-title" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                        <i class="hgi-stroke hgi-calendar-01 icon-md"></i> Reserve a Table
+                    </h2>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Select your preferred
+                        table section and reserve your dining spot.</p>
+
+                    <!-- Table Type Visual Selection Cards -->
+                    <label class="custom-label" style="margin-bottom: 10px;">
+                        <i class="hgi-stroke hgi-restaurant-01 icon-sm" style="margin-right: 4px;"></i> Select Dining
+                        Section
+                    </label>
+                    <div class="table-type-cards-grid">
+                        <div class="table-type-card" ng-repeat="tt in tableTypes"
+                            ng-class="{selected: reservation.tableType === tt.value}"
+                            ng-click="reservation.tableType = tt.value">
+                            <div class="table-card-header">
+                                <span class="table-card-title">
+                                    <i class="hgi-stroke icon-sm" ng-class="tt.icon" style="margin-right: 4px;"></i> {{
+                                    tt.value }}
+                                </span>
+                                <span class="table-card-price">₹{{ tt.price }}/guest</span>
+                            </div>
+                            <div class="table-card-features">{{ tt.features }}</div>
+                        </div>
+                    </div>
+
+                    <form name="reservationForm" ng-submit="reserveTable(reservationForm)" novalidate class="form-grid">
+                        <div>
+                            <label class="custom-label"><i class="hgi-stroke hgi-user icon-sm"
+                                    style="margin-right: 4px;"></i> Customer Name</label>
+                            <input type="text" ng-model="reservation.customerName" required class="custom-input"
+                                placeholder="Full name">
+                        </div>
+
+                        <div>
+                            <label class="custom-label"><i class="hgi-stroke hgi-user-group icon-sm"
+                                    style="margin-right: 4px;"></i> Number of Guests</label>
+                            <input type="number" ng-model="reservation.guests" min="1" max="20" required
+                                class="custom-input" placeholder="Number of guests">
+                        </div>
+
+                        <div>
+                            <label class="custom-label"><i class="hgi-stroke hgi-calendar-01 icon-sm"
+                                    style="margin-right: 4px;"></i> Reservation Date</label>
+                            <input type="date" ng-model="reservation.date" required class="custom-input">
+                        </div>
+
+                        <div>
+                            <label class="custom-label"><i class="hgi-stroke hgi-clock-01 icon-sm"
+                                    style="margin-right: 4px;"></i> Reservation Time</label>
+                            <input type="time" ng-model="reservation.time" required class="custom-input">
+                        </div>
+
+                        <div>
+                            <label class="custom-label"><i class="hgi-stroke hgi-star icon-sm"
+                                    style="margin-right: 4px;"></i> Dining Occasion</label>
+                            <select ng-model="reservation.occasion" ng-options="occ for occ in occasions"
+                                class="custom-input"></select>
+                        </div>
+
+                        <div>
+                            <label class="custom-label"><i class="hgi-stroke hgi-smart-phone-02 icon-sm"
+                                    style="margin-right: 4px;"></i> Phone Number</label>
+                            <input type="tel" ng-model="reservation.phone" class="custom-input"
+                                placeholder="Phone number">
+                        </div>
+
+                        <div class="form-group-full">
+                            <label class="custom-label"><i class="hgi-stroke hgi-information-circle icon-sm"
+                                    style="margin-right: 4px;"></i> Special Requests (Optional)</label>
+                            <input type="text" ng-model="reservation.specialRequests" class="custom-input"
+                                placeholder="Dietary restrictions, high chair, window seat preferences...">
+                        </div>
+
+                        <!-- Live Price Estimate Banner -->
+                        <div class="form-group-full reservation-summary-banner">
+                            <div>
+                                <span>Estimated Table Booking Fee:</span>
+                                <span style="font-size: 11px; display: block; color: #047857; font-weight: 500;">(100%
+                                    credited towards your final food bill)</span>
+                            </div>
+                            <span style="font-size: 18px; font-weight: 700;">{{ getTablePrice() | currency:'₹' }}</span>
+                        </div>
+
+                        <div class="form-group-full" style="margin-top: 8px;">
+                            <button type="submit" ng-disabled="reservationForm.$invalid" class="btn-primary-cta">
+                                Confirm & Reserve Table
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right Information & Experience Perks Sidebar -->
+                <div>
+                    <!-- Perks & Guest Benefits -->
+                    <div class="sidebar-card" style="margin-bottom: 20px;">
+                        <div class="sidebar-title-row">
+                            <h3 class="sidebar-title">Dining Perks Included</h3>
+                            <i class="hgi-stroke hgi-star icon-md" style="color: #eab308;"></i>
+                        </div>
+                        <ul
+                            style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--text-muted);">
+                            <li style="display: flex; align-items: flex-start; gap: 10px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green); margin-top: 2px;"></i>
+                                <span>Complimentary welcome mocktail on arrival</span>
+                            </li>
+                            <li style="display: flex; align-items: flex-start; gap: 10px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green); margin-top: 2px;"></i>
+                                <span>Guaranteed table seating upon arrival</span>
+                            </li>
+                            <li style="display: flex; align-items: flex-start; gap: 10px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green); margin-top: 2px;"></i>
+                                <span>Option to pre-order meals ahead of time</span>
+                            </li>
+                            <li style="display: flex; align-items: flex-start; gap: 10px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green); margin-top: 2px;"></i>
+                                <span>Dedicated host concierge service</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Booking Policy Card -->
+                    <div class="sidebar-card" style="margin-bottom: 20px;">
+                        <div class="sidebar-title-row">
+                            <h3 class="sidebar-title">Reservation Policy</h3>
+                            <i class="hgi-stroke hgi-information-circle icon-md" style="color: var(--accent-blue);"></i>
+                        </div>
+                        <div
+                            style="font-size: 13px; color: var(--text-muted); line-height: 1.5; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-blue); margin-top: 2px;"></i>
+                                <span><strong>Free Cancellation:</strong> Cancel up to 2 hours before your scheduled
+                                    reservation time.</span>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-blue); margin-top: 2px;"></i>
+                                <span><strong>Bill Credit:</strong> The booking fee paid is 100% deducted from your
+                                    final food & beverage bill.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assistance Widget -->
+                    <div class="sidebar-card" style="background: var(--bg-card);">
+                        <div style="font-size: 14px; color: var(--text-main); font-weight: 700; margin-bottom: 6px;">
+                            Need Special Event Hosting?
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">For large corporate
+                            events or private lounge bookings of 20+ guests, contact our concierge line.</p>
+                        <div
+                            style="font-size: 14px; font-weight: 700; color: var(--accent-blue); margin-top: 10px; display: flex; align-items: center; gap: 6px;">
+                            <i class="hgi-stroke hgi-smart-phone-02 icon-sm"></i> +91 98765 43210
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- BOOKING SUMMARY VIEW -->
+        <div class="full-width-content" ng-if="currentView === 'summary'">
+            <div class="summary-container">
+                <div class="success-badge-card">
+                    <h2
+                        style="font-size: 22px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <i class="hgi-stroke hgi-checkmark-circle-02 icon-lg"></i> Table Reserved Successfully!
+                    </h2>
+                    <p><strong>Name:</strong> {{ submittedData.customerName }}</p>
+                    <p><strong>Table Type:</strong> {{ submittedData.tableType }}</p>
+                    <p><strong>Date:</strong> {{ submittedData.date | date:'longDate' }}</p>
+                    <p><strong>Time:</strong> {{ formatTime(submittedData.time) }}</p>
+                    <p><strong>Guests:</strong> {{ submittedData.guests }}</p>
+                </div>
+
+                <div class="preorder-prompt-card">
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Would you like to Pre-Order Food?
+                    </h3>
+                    <p style="font-size: 14px; margin-bottom: 20px;">Pre-ordering ensures your meal is prepared and
+                        ready right when you sit down!</p>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-primary-cta" style="flex: 1;" ng-click="startPreOrder()">Yes, Browse
+                            Menu</button>
+                        <button class="pill-btn" style="flex: 1; padding: 14px; text-align: center;"
+                            ng-click="goToPayment(getTablePrice(), 'table_reservation')">
+                            Pay Booking Fee Only ({{ getTablePrice() | currency:'₹' }})
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- PAYMENT VIEW (Refined 2-Column Checkout Hub) -->
+        <div class="full-width-content" ng-if="currentView === 'payment'">
+
+            <!-- Processing Payment Loading Screen -->
+            <div class="payment-main-card" ng-if="isProcessingPayment"
+                style="max-width: 520px; margin: 40px auto; text-align: center; padding: 48px 32px;">
+                <div class="loading-spinner"
+                    style="margin: 0 auto 20px auto; width: 44px; height: 44px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;">
+                </div>
+                <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Processing Payment...</h3>
+                <p style="color: var(--text-muted); font-size: 14px;">Communicating securely with 256-bit SSL Gateway.
+                    Please do not refresh.</p>
+            </div>
+
+            <!-- Payment Success Receipt Card -->
+            <div class="payment-main-card" ng-if="paymentSuccess"
+                style="max-width: 540px; margin: 40px auto; text-align: center; padding: 40px 32px;">
+                <div
+                    style="width: 64px; height: 64px; background: #ecfdf5; border: 2px solid #a7f3d0; border-radius: 50%; color: var(--accent-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px auto;">
+                    <i class="hgi-stroke hgi-checkmark-circle-02 icon-xl"></i>
+                </div>
+                <h2 style="font-size: 24px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Payment
+                    Successful!</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Order Reference ID: <strong
+                        style="color: var(--text-main);">#DE-984210</strong></p>
+
+                <div
+                    style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 24px; text-align: left; font-size: 13px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--text-muted);">Paid Amount:</span>
+                        <strong style="color: var(--accent-green); font-size: 17px;">{{ amountToPay | currency:'₹'
+                            }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--text-muted);">Payment Method:</span>
+                        <span style="font-weight: 600; text-transform: uppercase;">{{ paymentMethod }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">Status:</span>
+                        <span style="color: var(--accent-green); font-weight: 600;">✓ Confirmed & Sent to Kitchen</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-primary-cta" style="flex: 1;" ng-click="switchView('dashboard')">Return to
+                        Dashboard</button>
+                    <button class="btn-secondary-cta" style="flex: 1;" ng-click="switchView('menu')">Browse Menu
+                        Again</button>
+                </div>
+            </div>
+
+            <!-- Main 2-Column Checkout Hub -->
+            <div class="payment-layout-split" ng-if="!isProcessingPayment && !paymentSuccess">
+
+                <!-- Left Column: Gateways & Input Form -->
+                <div class="payment-main-card">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <h2 class="section-title"
+                            style="display: flex; align-items: center; gap: 8px; font-size: 22px;">
+                            <i class="hgi-stroke hgi-credit-card icon-lg"></i> Complete Payment
+                        </h2>
+                        <span
+                            style="font-size: 12px; font-weight: 600; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 5px 12px; border-radius: var(--radius-pill); display: flex; align-items: center; gap: 6px;">
+                            <i class="hgi-stroke hgi-lock-password icon-sm" style="color: var(--accent-green);"></i>
+                            256-Bit
+                            SSL Encrypted
+                        </span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Select your preferred
+                        payment gateway to finalize your dining order.</p>
+
+                    <!-- Payment Method Tabs -->
+                    <div class="payment-methods-tabs">
+                        <button class="payment-tab-btn" ng-class="{active: paymentMethod === 'card'}"
+                            ng-click="paymentMethod = 'card'">
+                            <i class="hgi-stroke hgi-credit-card icon-sm"></i> Credit / Debit Card
+                        </button>
+                        <button class="payment-tab-btn" ng-class="{active: paymentMethod === 'upi'}"
+                            ng-click="paymentMethod = 'upi'">
+                            <i class="hgi-stroke hgi-smart-phone-02 icon-sm"></i> UPI Instant Pay
+                        </button>
+                        <button class="payment-tab-btn" ng-class="{active: paymentMethod === 'netbanking'}"
+                            ng-click="paymentMethod = 'netbanking'">
+                            <i class="hgi-stroke hgi-bank icon-sm"></i> Net Banking
+                        </button>
+                        <button class="payment-tab-btn" ng-class="{active: paymentMethod === 'cash'}"
+                            ng-click="paymentMethod = 'cash'">
+                            <i class="hgi-stroke hgi-wallet-02 icon-sm"></i> Pay at Counter
+                        </button>
+                    </div>
+
+                    <!-- TAB 1: CREDIT / DEBIT CARD VIEW -->
+                    <div ng-if="paymentMethod === 'card'">
+                        <!-- Integrated Active Card Preview Bar -->
+                        <div class="active-card-bar">
+                            <div class="active-card-info">
+                                <div class="active-card-icon">VISA</div>
+                                <div class="active-card-details">
+                                    <div class="active-card-number">{{ cardData.number || '•••• •••• •••• ••••' }}</div>
+                                    <div class="active-card-meta">{{ cardData.name || 'Emir Abiyyu' }} • Exp {{
+                                        cardData.expiry || 'MM/YY' }}</div>
+                                </div>
+                            </div>
+                            <span
+                                style="font-size: 12px; font-weight: 600; color: var(--accent-green); background: #ecfdf5; padding: 4px 10px; border-radius: 9999px; display: flex; align-items: center; gap: 4px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"></i> Active Card
+                            </span>
+                        </div>
+
+                        <!-- Card Inputs -->
+                        <form ng-submit="completePayment()" class="form-grid">
+                            <div class="form-group-full">
+                                <label class="custom-label"><i class="hgi-stroke hgi-credit-card icon-sm"
+                                        style="margin-right: 4px;"></i> Card Number</label>
+                                <input type="text" ng-model="cardData.number" class="custom-input"
+                                    placeholder="4532 8921 3410 8821" required>
+                            </div>
+
+                            <div>
+                                <label class="custom-label"><i class="hgi-stroke hgi-calendar-01 icon-sm"
+                                        style="margin-right: 4px;"></i> Expiry Date</label>
+                                <input type="text" ng-model="cardData.expiry" class="custom-input" placeholder="MM/YY"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="custom-label"><i class="hgi-stroke hgi-lock-password icon-sm"
+                                        style="margin-right: 4px;"></i> CVV Code</label>
+                                <input type="password" ng-model="cardData.cvv" class="custom-input" placeholder="•••"
+                                    maxLength="4" required>
+                            </div>
+
+                            <div class="form-group-full">
+                                <label class="custom-label"><i class="hgi-stroke hgi-user icon-sm"
+                                        style="margin-right: 4px;"></i> Cardholder Name</label>
+                                <input type="text" ng-model="cardData.name" class="custom-input"
+                                    placeholder="Full name on card" required>
+                            </div>
+
+                            <div class="form-group-full" style="margin-top: 12px; display: flex; gap: 12px;">
+                                <button type="submit" class="btn-primary-cta" style="flex: 2;">
+                                    Pay {{ getFinalPayableTotal() | currency:'₹' }} Now
+                                </button>
+                                <button type="button" class="btn-secondary-cta" style="flex: 1;"
+                                    ng-click="switchView('menu')">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- TAB 2: UPI INSTANT PAY VIEW (Redesigned with SVG Logos & QR Code) -->
+                    <div ng-if="paymentMethod === 'upi'">
+
+                        <!-- Sub Mode Toggle: VPA ID vs Scan QR Code -->
+                        <div class="upi-mode-toggle">
+                            <button type="button" class="upi-mode-btn" ng-class="{active: upiMode === 'vpa'}"
+                                ng-click="upiMode = 'vpa'">
+                                <i class="hgi-stroke hgi-smart-phone-02 icon-sm"></i> Pay via VPA ID / App
+                            </button>
+                            <button type="button" class="upi-mode-btn" ng-class="{active: upiMode === 'qr'}"
+                                ng-click="upiMode = 'qr'">
+                                <i class="hgi-stroke hgi-grid-view icon-sm"></i> Scan QR Code
+                            </button>
+                        </div>
+
+                        <!-- MODE 1: PAY VIA VPA / APP -->
+                        <div ng-if="upiMode === 'vpa'">
+                            <label class="custom-label" style="margin-bottom: 10px;">Select Payment App</label>
+                            <div class="upi-apps-grid">
+                                <div class="upi-app-card" ng-repeat="app in upiApps"
+                                    ng-class="{selected: selectedUpiApp === app.id}"
+                                    ng-click="$parent.selectedUpiApp = app.id">
+                                    <div class="upi-app-svg-box">
+                                        <img ng-src="{{ app.iconPath }}" alt="{{ app.name }}"
+                                            style="height: 26px; max-width: 100%; object-fit: contain;">
+                                    </div>
+                                    <div class="upi-app-name">{{ app.name }}</div>
+                                </div>
+                            </div>
+
+                            <form ng-submit="completePayment()">
+                                <div class="customer-input-field" style="margin-bottom: 20px;">
+                                    <label class="custom-label"><i class="hgi-stroke hgi-smart-phone-02 icon-sm"
+                                            style="margin-right: 4px;"></i> Enter VPA ID / Mobile Number</label>
+                                    <input type="text" ng-model="upiData.vpa" class="custom-input"
+                                        placeholder="e.g. name@okaxis" required>
+                                </div>
+
+                                <div style="display: flex; gap: 12px;">
+                                    <button type="submit" class="btn-primary-cta" style="flex: 2;">
+                                        Pay {{ getFinalPayableTotal() | currency:'₹' }} via UPI
+                                    </button>
+                                    <button type="button" class="btn-secondary-cta" style="flex: 1;"
+                                        ng-click="switchView('menu')">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- MODE 2: SCAN QR CODE -->
+                        <div ng-if="upiMode === 'qr'">
+                            <div class="upi-qr-card">
+                                <h4
+                                    style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+                                    Scan with Any UPI App</h4>
+                                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Scan this QR
+                                    code using Google Pay, PhonePe, Paytm, or BHIM.</p>
+
+                                <div class="qr-code-box">
+                                    <svg width="150" height="150" viewBox="0 0 100 100" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="100" height="100" fill="white" />
+                                        <!-- Outer positioning squares -->
+                                        <rect x="5" y="5" width="30" height="30" fill="none" stroke="#0f172a"
+                                            stroke-width="4" />
+                                        <rect x="12" y="12" width="16" height="16" fill="#0f172a" />
+                                        <rect x="65" y="5" width="30" height="30" fill="none" stroke="#0f172a"
+                                            stroke-width="4" />
+                                        <rect x="72" y="12" width="16" height="16" fill="#0f172a" />
+                                        <rect x="5" y="65" width="30" height="30" fill="none" stroke="#0f172a"
+                                            stroke-width="4" />
+                                        <rect x="12" y="72" width="16" height="16" fill="#0f172a" />
+                                        <!-- Pattern dots -->
+                                        <rect x="42" y="8" width="8" height="8" fill="#0f172a" />
+                                        <rect x="52" y="18" width="8" height="8" fill="#0f172a" />
+                                        <rect x="42" y="28" width="8" height="8" fill="#0f172a" />
+                                        <rect x="8" y="42" width="8" height="8" fill="#0f172a" />
+                                        <rect x="22" y="48" width="8" height="8" fill="#0f172a" />
+                                        <rect x="42" y="42" width="16" height="16" fill="#0f172a" />
+                                        <rect x="68" y="42" width="8" height="8" fill="#0f172a" />
+                                        <rect x="82" y="48" width="8" height="8" fill="#0f172a" />
+                                        <rect x="42" y="68" width="8" height="8" fill="#0f172a" />
+                                        <rect x="52" y="78" width="16" height="16" fill="#0f172a" />
+                                        <rect x="78" y="68" width="14" height="14" fill="#0f172a" />
+                                    </svg>
+                                </div>
+
+                                <div
+                                    style="font-size: 18px; font-weight: 700; color: var(--accent-green); margin-bottom: 6px;">
+                                    {{ getFinalPayableTotal() | currency:'₹' }}
+                                </div>
+                                <div style="font-size: 12px; color: var(--accent-red); font-weight: 600;">
+                                    ⏱️ QR Code expires in 04:58 mins
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px;">
+                                <button type="button" class="btn-primary-cta" style="flex: 2;"
+                                    ng-click="completePayment()">
+                                    Verify & Complete Payment
+                                </button>
+                                <button type="button" class="btn-secondary-cta" style="flex: 1;"
+                                    ng-click="switchView('menu')">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- TAB 3: NETBANKING VIEW (Redesigned with Installed Hugeicons) -->
+                    <div ng-if="paymentMethod === 'netbanking'">
+                        <label class="custom-label" style="margin-bottom: 12px;">Select Popular Bank</label>
+                        <div class="netbanking-grid">
+                            <div class="bank-card" ng-repeat="bank in banks"
+                                ng-class="{selected: selectedBank === bank.code}"
+                                ng-click="$parent.selectedBank = bank.code">
+                                <div class="bank-info">
+                                    <div class="bank-badge">
+                                        <i class="hgi-stroke {{ bank.icon }} icon-md"></i>
+                                    </div>
+                                    <div class="bank-name">{{ bank.name }}</div>
+                                </div>
+                                <div class="bank-radio-circle">
+                                    <div class="bank-radio-dot" ng-if="selectedBank === bank.code"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <button type="button" class="btn-primary-cta" style="flex: 2;" ng-click="completePayment()">
+                                Proceed to Bank Portal
+                            </button>
+                            <button type="button" class="btn-secondary-cta" style="flex: 1;"
+                                ng-click="switchView('menu')">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: PAY AT COUNTER / CASH VIEW -->
+                    <div ng-if="paymentMethod === 'cash'">
+                        <div
+                            style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px; text-align: center;">
+                            <i class="hgi-stroke hgi-wallet-02 icon-xl"
+                                style="color: var(--primary); margin-bottom: 8px;"></i>
+                            <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Pay at Table / POS
+                                Counter</h4>
+                            <p style="font-size: 13px; color: var(--text-muted);">You can settle the bill via cash or
+                                card terminal when your meal is served at your reserved table.</p>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <button type="button" class="btn-primary-cta" style="flex: 2;" ng-click="completePayment()">
+                                Confirm Pay at Restaurant
+                            </button>
+                            <button type="button" class="btn-secondary-cta" style="flex: 1;"
+                                ng-click="switchView('menu')">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Order Receipt Breakdown & Security Sidebar -->
+                <div>
+                    <!-- Order Receipt Breakdown -->
+                    <div class="sidebar-card" style="margin-bottom: 20px;">
+                        <div class="sidebar-title-row">
+                            <h3 class="sidebar-title">Order Breakdown</h3>
+                            <i class="hgi-stroke hgi-shopping-cart-01 icon-md"></i>
+                        </div>
+
+                        <!-- Itemized Cart List -->
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;"
+                            ng-if="cart.length > 0">
+                            <div ng-repeat="item in cart"
+                                style="display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <img ng-src="{{ item.image }}"
+                                        style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover;">
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--text-main);">{{ item.name }}</div>
+                                        <div style="font-size: 11px; color: var(--text-muted);">Qty: {{ item.quantity }}
+                                            × {{ item.price | currency:'₹' }}</div>
+                                    </div>
+                                </div>
+                                <span style="font-weight: 700; color: var(--text-main);">{{ getItemTotal(item) |
+                                    currency:'₹' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Table Booking Fee credit row if table pending -->
+                        <div ng-if="pendingTablePayment"
+                            style="display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-top: 1px dashed var(--border-color); color: var(--accent-blue);">
+                            <span>🪑 Table Reservation Fee</span>
+                            <span style="font-weight: 700;">{{ getTablePrice() | currency:'₹' }}</span>
+                        </div>
+
+                        <!-- Subtotal & Tax Breakdown -->
+                        <div
+                            style="border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-muted);">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Subtotal</span>
+                                <span>{{ getGrandTotal() | currency:'₹' }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Taxes & GST (5%)</span>
+                                <span>{{ getTaxAmount() | currency:'₹' }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: var(--accent-red);"
+                                ng-if="appliedDiscount > 0">
+                                <span>Promo Discount (15%)</span>
+                                <span>-{{ appliedDiscount | currency:'₹' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Final Total Readout -->
+                        <div
+                            style="margin-top: 14px; padding-top: 12px; border-top: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 15px; font-weight: 700; color: var(--text-main);">Total Payable
+                                Amount</span>
+                            <span style="font-size: 20px; font-weight: 700; color: var(--accent-green);">{{
+                                getFinalPayableTotal() | currency:'₹' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Promo Code Card -->
+                    <div class="sidebar-card" style="margin-bottom: 20px;">
+                        <div class="sidebar-title-row">
+                            <h3 class="sidebar-title">Have a Promo Code?</h3>
+                            <i class="hgi-stroke hgi-star icon-md" style="color: #eab308;"></i>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-muted);">Use code <strong
+                                style="color: var(--primary);">DINEEASE15</strong> for 15% OFF your order.</p>
+
+                        <div class="promo-code-box">
+                            <input type="text" ng-model="promoCode" class="promo-code-input" placeholder="DINEEASE15">
+                            <button class="btn-apply-promo" ng-if="!promoApplied"
+                                ng-click="applyPromoCode()">Apply</button>
+                            <button class="btn-apply-promo" style="background: var(--accent-red);" ng-if="promoApplied"
+                                ng-click="removePromoCode()">Remove</button>
+                        </div>
+                    </div>
+
+                    <!-- Security & Trust Badges -->
+                    <div class="sidebar-card" style="background: var(--bg-card);">
+                        <ul
+                            style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: var(--text-muted);">
+                            <li style="display: flex; align-items: center; gap: 8px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green);"></i>
+                                <span>256-Bit Bank Grade SSL Encryption</span>
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 8px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green);"></i>
+                                <span>Instant Refund Guarantee on Cancellations</span>
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 8px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green);"></i>
+                                <span>PCI-DSS Verified Secure Gateway</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- VIEW 5: ORDER HISTORY PAGE -->
+        <div class="orders-layout-container" ng-if="currentView === 'orders'">
+
+            <!-- Hero Banner Header -->
+            <div class="dashboard-hero-refined" style="margin-bottom: 24px;">
+                <div class="hero-text-content">
+                    <span class="hero-badge-tag"><i class="hgi-stroke hgi-clock-01 icon-sm"></i> Live Dining Tickets &
+                        History</span>
+                    <h1 style="font-size: 26px; font-weight: 800; margin: 8px 0 6px 0; color: #ffffff;">Order History &
+                        Activity</h1>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 14px; max-width: 600px;">
+                        Track your active kitchen orders, view digital receipts, and instantly re-order your favorite
+                        dishes.
                     </p>
-                    
-                    <div ng-if="item.available">
-                        <label for="quantity-{{item.id}}">Qty:</label>
-                        <input type="number" id="quantity-{{item.id}}" ng-model="item.quantity" min="1" max="10">
-                        <button ng-click="addToCart(item)">Add to Cart</button>
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div
+                        style="background: rgba(255,255,255,0.08); padding: 14px 20px; border-radius: 12px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 20px; font-weight: 800; color: #38bdf8;">{{ orderHistory.length }}</div>
+                        <div style="font-size: 11px; opacity: 0.8; text-transform: uppercase;">Total Orders</div>
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.08); padding: 14px 20px; border-radius: 12px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 20px; font-weight: 800; color: #f97316;">1</div>
+                        <div style="font-size: 11px; opacity: 0.8; text-transform: uppercase;">Active Kitchen</div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-
-    <!-- 5. PRE-ORDER CART VIEW (Ananthu's Part) -->
-    <section ng-if="currentView === 'cart'">
-        <h2>Your Order Cart</h2>
-
-        <div ng-if="cart.length === 0">
-            <p>Your cart is empty. Add food items from the menu to start pre-ordering.</p>
-            <button ng-click="switchView('menu')">Browse Menu</button>
-        </div>
-
-        <div ng-if="cart.length > 0">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Food Name</th>
-                        <th>Quantity</th>
-                        <th>Price</th>
-                        <th>Item Total</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="item in cart">
-                        <td>{{ item.name }}</td>
-                        <td>
-                            <button type="button" ng-click="decreaseQty(item)">-</button>
-                            <span>{{ item.quantity }}</span>
-                            <button type="button" ng-click="increaseQty(item)">+</button>
-                        </td>
-                        <td>{{ item.price | currency:'₹' }}</td>
-                        <td>{{ getItemTotal(item) | currency:'₹' }}</td>
-                        <td>
-                            <button type="button" ng-click="removeItem(item)">Remove</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <div>
-                ⏱️ {{ getWaitTimeMessage() }}
+            <!-- Status Filters Bar -->
+            <div class="orders-filter-bar">
+                <button class="order-filter-pill" ng-class="{active: orderFilter === 'all'}"
+                    ng-click="orderFilter = 'all'">
+                    <i class="hgi-stroke hgi-grid-view icon-sm"></i> All Orders ({{ orderHistory.length }})
+                </button>
+                <button class="order-filter-pill" ng-class="{active: orderFilter === 'active'}"
+                    ng-click="orderFilter = 'active'">
+                    <i class="hgi-stroke hgi-fire icon-sm" style="color: #f97316;"></i> Active Kitchen Orders
+                </button>
+                <button class="order-filter-pill" ng-class="{active: orderFilter === 'completed'}"
+                    ng-click="orderFilter = 'completed'">
+                    <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm" style="color: var(--accent-green);"></i>
+                    Delivered & Paid
+                </button>
             </div>
 
-            <div>
-                <div ng-if="pendingTablePayment">
-                    <div>Food Total: {{ getGrandTotal() | currency:'₹' }}</div>
-                    <div>Table Booking Fee: {{ getTablePrice() | currency:'₹' }}</div>
-                    <div>
-                        <strong>Combined Total:</strong> {{ getGrandTotal() + getTablePrice() | currency:'₹' }}
+            <!-- Order Cards List -->
+            <div class="order-cards-list">
+                <div class="order-history-card"
+                    ng-repeat="order in orderHistory | filter:(orderFilter === 'all' ? '' : {statusCode: orderFilter})">
+
+                    <div class="order-card-header">
+                        <div>
+                            <div class="order-id-title">
+                                Order #{{ order.id }}
+                                <span class="order-status-badge" ng-class="order.statusCode">
+                                    <span ng-if="order.statusCode === 'active'"
+                                        style="display: flex; align-items: center; gap: 4px;">
+                                        <i class="hgi-stroke hgi-fire icon-sm" style="color: #ea580c;"></i> {{
+                                        order.status }} (<i class="hgi-stroke hgi-clock-01 icon-sm"></i> {{
+                                        order.prepTime }})
+                                    </span>
+                                    <span ng-if="order.statusCode === 'completed'"
+                                        style="display: flex; align-items: center; gap: 4px;">
+                                        <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                            style="color: var(--accent-green);"></i> {{ order.status }}
+                                    </span>
+                                </span>
+                            </div>
+                            <div
+                                style="font-size: 12px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 14px;">
+                                <span><i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 4px;"></i> {{
+                                    order.date }}</span>
+                                <span><i class="hgi-stroke hgi-home-01 icon-sm" style="margin-right: 4px;"></i> {{
+                                    order.table }}</span>
+                                <span><i class="hgi-stroke hgi-credit-card icon-sm" style="margin-right: 4px;"></i> {{
+                                    order.paymentMethod }}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button class="btn-secondary-cta" style="height: 38px; padding: 0 16px; font-size: 12px;"
+                                ng-click="reorderItems(order)">
+                                <i class="hgi-stroke hgi-shopping-cart-01 icon-sm" style="margin-right: 4px;"></i>
+                                Re-order Items
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div ng-if="!pendingTablePayment">
-                    <strong>Grand Total:</strong>
-                    <span>{{ getGrandTotal() | currency:'₹' }}</span>
-                </div>
-            </div>
-            
-            <div>
-                <button ng-if="pendingTablePayment" ng-click="goToPayment(getGrandTotal() + getTablePrice(), 'combined_order')">Pay Table + Food ({{ getGrandTotal() + getTablePrice() | currency:'₹' }})</button>
-                <button ng-if="!pendingTablePayment" ng-click="goToPayment(getGrandTotal(), 'food_order')">Proceed to Checkout</button>
-            </div>
-        </div>
-    </section>
 
+                    <div class="order-card-body">
+                        <!-- Left: Items list -->
+                        <div class="order-items-mini-list">
+                            <div class="order-item-mini-row" ng-repeat="item in order.items">
+                                <img ng-src="{{ item.image }}" alt="{{ item.name }}" class="order-item-mini-img">
+                                <div style="flex: 1;">
+                                    <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">{{
+                                        item.name }}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">Qty: {{ item.quantity }} ×
+                                        {{ item.price | currency:'₹' }}</div>
+                                </div>
+                                <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">
+                                    {{ (item.price * item.quantity) | currency:'₹' }}
+                                </div>
+                            </div>
+                        </div>
 
-    <!-- 6. PAYMENT MODULE VIEW (Goutham's Part) -->
-    <section id="payment-view" ng-if="currentView === 'payment'">
-        
-        <!-- Processing Loader -->
-        <div ng-if="isProcessingPayment">
-            <div></div>
-            <h3>Processing Payment...</h3>
-        </div>
-        
-        <!-- Payment Form -->
-        <div ng-if="!paymentSuccess && !isProcessingPayment">
-            <h2 ng-if="paymentContext === 'table_reservation'">Pay Table Reservation Fee</h2>
-            <h2 ng-if="paymentContext === 'food_order'">Pay Your Food Bill</h2>
-            <h2 ng-if="paymentContext === 'combined_order'">Pay Table & Food Bill</h2>
-            
-            <h3>Total Amount: {{ amountToPay | currency:'₹' }}</h3>
-            
-            <div>
-                <p>Select Payment Method:</p>
-                <label><input type="radio" name="payment_method" value="card" checked> Credit/Debit Card</label>
-                <label><input type="radio" name="payment_method" value="upi"> UPI</label>
+                        <!-- Right: Summary & Total Card -->
+                        <div class="order-summary-side">
+                            <div>
+                                <div
+                                    style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                                    Total Paid</div>
+                                <div style="font-size: 22px; font-weight: 800; color: var(--accent-green);">{{
+                                    order.totalAmount | currency:'₹' }}</div>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
+                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
+                                    style="color: var(--accent-green);"></i> Paid & Confirmed
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-            
-            <div>
-                <input type="text" ng-model="dummyPaymentDetails" placeholder="Enter Payment Details (Dummy)">
-            </div>
-            
-            <button ng-click="completePayment()">Pay Now</button>
-            <button ng-click="switchView('dashboard')">Cancel</button>
+
         </div>
-        
-        <!-- Success Message -->
-        <div ng-if="paymentSuccess">
-            <h2>Payment Successful!</h2>
-            <p ng-if="paymentContext === 'table_reservation'">Your table has been reserved. See you soon!</p>
-            <p ng-if="paymentContext === 'food_order'">Your food order has been placed and is being prepared!</p>
-            <p ng-if="paymentContext === 'combined_order'">Your table is reserved and food is pre-ordered. See you soon!</p>
-            
-            <button ng-click="switchView('dashboard')">Return to Dashboard</button>
-        </div>
-        
-    </section>
+
+    </div>
 
 </body>
+
 </html>
