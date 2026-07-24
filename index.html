@@ -1,11 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="RestaurantApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+    <title>Restaurant Table Reservation & Food Pre-Ordering</title>
+    <link rel="stylesheet" href="css/style.css">
     
+    <script src="node_modules/angular/angular.min.js"></script>
+    <script src="js/app.js"></script>
+</head>
+<body ng-controller="MainController">
+
+    <section id="food-menu">
+        <h2>Our Menu</h2>
+        
+        <div class="menu-container">
+            <div class="menu-card" ng-repeat="item in menuItems">
+                <img ng-src="{{ item.image }}" alt="{{ item.name }}" class="menu-image">
+                <div class="menu-details">
+                    <h3>{{ item.name }}</h3>
+                    
+                    <p class="category">Category: {{ item.category }}</p>
+                    
+                    <p class="price">Price: {{ item.price | currency:'₹' }}</p>
+                    
+                    <span class="type-badge" ng-class="{'badge-veg': item.type === 'Veg', 'badge-non-veg': item.type === 'Non-Veg'}">
+                        {{ item.type }}
+                    </span>
+                    
+                    <p class="availability">
+                        <span ng-if="item.available">Available</span>
+                        <span ng-if="!item.available">Out of Stock</span>
+                    </p>
+                    
+                    <div class="order-controls" ng-if="item.available">
+                        <label for="quantity-{{item.id}}">Qty:</label>
+                        <input type="number" id="quantity-{{item.id}}" ng-model="item.quantity" min="1" max="10">
+                        <button ng-click="addToCart(item)">Add</button>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
 </body>
 </html>
