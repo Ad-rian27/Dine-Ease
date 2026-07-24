@@ -1,6 +1,10 @@
 var app = angular.module('RestaurantApp', []);
 
-app.controller('MainController', function($scope) {
+app.controller('MainController', function($scope, $timeout) {
+    $scope.currentView = 'dashboard';
+    $scope.paymentSuccess = false;
+    $scope.isProcessingPayment = false;
+
     $scope.menuItems = [
         {
             id: 1,
@@ -121,5 +125,27 @@ app.controller('MainController', function($scope) {
         }
         
         item.quantity = 1;
+    };
+
+    $scope.goToPayment = function(price, context) {
+        $scope.amountToPay = price;
+        $scope.paymentContext = context;
+        $scope.paymentSuccess = false;
+        $scope.currentView = 'payment';
+    };
+
+    $scope.completePayment = function() {
+        $scope.isProcessingPayment = true;
+        
+        $timeout(function() {
+            $scope.isProcessingPayment = false;
+            $scope.paymentSuccess = true;
+            $scope.dummyPaymentDetails = ''; // Clear the form input
+        }, 2000);
+    };
+    
+    $scope.backToDashboard = function() {
+        $scope.currentView = 'dashboard';
+        $scope.paymentSuccess = false;
     };
 });
