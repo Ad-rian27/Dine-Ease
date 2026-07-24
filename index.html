@@ -1,272 +1,45 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="restaurantApp">
+<html lang="en" ng-app="RestaurantApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dine-Ease | Dashboard Module (Adrian)</title>
-    
-    <!-- Google Fonts & Font Awesome Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Application Stylesheet -->
+    <title>Restaurant Table Reservation & Food Pre-Ordering</title>
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- AngularJS CDN -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
-    <!-- Application Logic Script -->
+    <script src="node_modules/angular/angular.min.js"></script>
     <script src="js/app.js"></script>
 </head>
-<body ng-controller="MainController" ng-init="initApp()">
+<body ng-controller="MainController">
 
-    <!-- Header Title (Concept: uppercase filter) -->
-    <h1>{{ restaurant.name | uppercase }}</h1>
-    <h2>Booking Summary Module</h2>
-
-    <button ng-click="toggleSummary()">Toggle Booking Summary View</button>
-
-    <!-- 6. Booking Summary Section (Adrian) -->
-    <!-- Concepts: ng-show, date, currency, number, ng-readonly, ng-repeat -->
-    <div id="booking-summary-section" ng-show="isBooked">
-        <h3>Booking Successful</h3>
-
-        <p><strong>Customer:</strong> {{ bookingDetails.customerName }}</p>
-        <p><strong>Table:</strong> {{ bookingDetails.tableType }}</p>
+    <section id="food-menu">
+        <h2>Our Menu</h2>
         
-        <!-- Concept: date filter -->
-        <p><strong>Date:</strong> {{ bookingDetails.date | date : 'dd MMMM yyyy' }}</p>
-        <p><strong>Time:</strong> {{ bookingDetails.time }}</p>
-        
-        <!-- Concept: number filter -->
-        <p><strong>Guests:</strong> {{ bookingDetails.guests | number }}</p>
-
-        <h4>Ordered Items</h4>
-        <ul>
-            <!-- Concept: ng-repeat, currency filter -->
-            <li ng-repeat="item in orderedItems">
-                {{ item.name }} x{{ item.qty }} - {{ (item.price * item.qty) | currency : '₹' : 0 }}
-            </li>
-        </ul>
-
-        <!-- Concept: currency filter -->
-        <p><strong>Grand Total:</strong> {{ grandTotal | currency : '₹' : 0 }}</p>
-
-        <!-- Concept: ng-readonly -->
-        <p>
-            <label for="refId">Booking Reference ID:</label>
-            <input type="text" id="refId" value="DE-{{ bookingDetails.date | date : 'yyyyMMdd' }}-{{ bookingDetails.phone | limitTo:-4 }}" ng-readonly="true">
-        </p>
-    </div>
-    <!-- Navbar Header -->
-    <nav class="navbar">
-        <a href="#" class="nav-brand">
-            <!-- Restaurant Logo Image -->
-            <img ng-src="{{ restaurant.logo }}" alt="Logo" class="brand-logo-img">
-            <!-- Concept: uppercase filter -->
-            <span class="brand-title">{{ restaurant.name | uppercase }}</span>
-        </a>
-    </nav>
-
-    <!-- Hero Banner -->
-    <header class="hero-section">
-        <div class="hero-content">
-            <!-- Concept: uppercase filter -->
-            <h1 class="hero-title">{{ restaurant.name | uppercase }}</h1>
-            <p class="hero-subtitle">Table Reservation Module</p>
-        </div>
-    </header>
-
-    <!-- 4. Reservation Form Section (Adrian) -->
-    <section class="container">
-        <div class="section-title-wrap">
-            <h2 class="section-title">Reserve Your Table</h2>
-            <p class="section-subtitle">Fill in your reservation details to book an exclusive table</p>
-        </div>
-
-        <div class="form-card">
-            <!-- Concept: ng-submit -->
-            <form name="reservationForm" ng-submit="reserveTable(reservationForm)" novalidate>
-                
-                <!-- 1. Customer Name Field -->
-                <div class="form-group">
-                    <label for="customerName">Customer Name <span style="color:red">*</span></label>
-                    <!-- Concepts: ng-model, required, minlength, maxlength -->
-                    <input type="text" 
-                           id="customerName" 
-                           name="customerName" 
-                           class="form-control" 
-                           ng-model="reservation.customerName" 
-                           required 
-                           ng-minlength="3" 
-                           ng-maxlength="30" 
-                           placeholder="e.g. John Doe">
-                    <div class="error-text" ng-if="reservationForm.customerName.$dirty && reservationForm.customerName.$invalid">
-                        <span ng-if="reservationForm.customerName.$error.required">Customer name is required.</span>
-                        <span ng-if="reservationForm.customerName.$error.minlength">Name must be at least 3 characters long.</span>
-                        <span ng-if="reservationForm.customerName.$error.maxlength">Name cannot exceed 30 characters.</span>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <!-- 2. Email Address Field -->
-                    <div class="form-group">
-                        <label for="email">Email Address <span style="color:red">*</span></label>
-                        <!-- Concepts: ng-model, required, lowercase filter preview -->
-                        <input type="email" 
-                               id="email" 
-                               name="email" 
-                               class="form-control" 
-                               ng-model="reservation.email" 
-                               required 
-                               placeholder="john@example.com">
-                        <div class="error-text" ng-if="reservationForm.email.$dirty && reservationForm.email.$invalid">
-                            <span ng-if="reservationForm.email.$error.required">Email address is required.</span>
-                            <span ng-if="reservationForm.email.$error.email">Please enter a valid email address.</span>
-                        </div>
-                    </div>
-
-                    <!-- 3. Phone Number Field -->
-                    <div class="form-group">
-                        <label for="phone">Phone Number <span style="color:red">*</span></label>
-                        <!-- Concepts: ng-model, required, minlength, maxlength -->
-                        <input type="text" 
-                               id="phone" 
-                               name="phone" 
-                               class="form-control" 
-                               ng-model="reservation.phone" 
-                               required 
-                               ng-minlength="10" 
-                               ng-maxlength="10" 
-                               placeholder="9876543210">
-                        <div class="error-text" ng-if="reservationForm.phone.$dirty && reservationForm.phone.$invalid">
-                            <span ng-if="reservationForm.phone.$error.required">Phone number is required.</span>
-                            <span ng-if="reservationForm.phone.$error.minlength || reservationForm.phone.$error.maxlength">Phone number must be exactly 10 digits.</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <!-- 4. Reservation Date Field -->
-                    <div class="form-group">
-                        <label for="date">Reservation Date <span style="color:red">*</span></label>
-                        <!-- Concepts: ng-model, required -->
-                        <input type="date" 
-                               id="date" 
-                               name="date" 
-                               class="form-control" 
-                               ng-model="reservation.date" 
-                               required>
-                        <div class="error-text" ng-if="reservationForm.date.$dirty && reservationForm.date.$invalid">
-                            Reservation date is required.
-                        </div>
-                    </div>
-
-                    <!-- 5. Reservation Time Field -->
-                    <div class="form-group">
-                        <label for="time">Reservation Time <span style="color:red">*</span></label>
-                        <!-- Concepts: ng-model, required -->
-                        <input type="time" 
-                               id="time" 
-                               name="time" 
-                               class="form-control" 
-                               ng-model="reservation.time" 
-                               required>
-                        <div class="error-text" ng-if="reservationForm.time.$dirty && reservationForm.time.$invalid">
-                            Reservation time is required.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <!-- 6. Guests Field -->
-                    <div class="form-group">
-                        <label for="guests">Number of Guests <span style="color:red">*</span></label>
-                        <!-- Concepts: ng-model, required, number -->
-                        <input type="number" 
-                               id="guests" 
-                               name="guests" 
-                               class="form-control" 
-                               ng-model="reservation.guests" 
-                               min="1" 
-                               max="20" 
-                               required>
-                        <div class="error-text" ng-if="reservationForm.guests.$dirty && reservationForm.guests.$invalid">
-                            Guest count must be between 1 and 20.
-                        </div>
-                    </div>
-
-                    <!-- 7. Table Seating Preference Dropdown -->
-                    <div class="form-group">
-                        <label for="tableType">Indoor/Outdoor Preference <span style="color:red">*</span></label>
-                        <!-- Concepts: ng-model, required, ng-options -->
-                        <select id="tableType" 
-                                name="tableType" 
-                                class="form-control" 
-                                ng-model="reservation.tableType" 
-                                ng-options="opt.value as opt.label for opt in tableTypes" 
-                                required>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Concept: lowercase filter live preview -->
-                <div class="email-preview" ng-if="reservation.email">
-                    <i class="fas fa-envelope"></i> Confirmation email will be sent to: <strong>{{ reservation.email | lowercase }}</strong>
-                </div>
-
-                <!-- Concept: ng-disabled -->
-                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;" ng-disabled="reservationForm.$invalid">
-                    <i class="fas fa-calendar-check"></i> Reserve Table Now
-                </button>
-
-            </form>
-
-            <!-- Submitted Feedback Banner -->
-            <div class="confirmation-card" ng-if="isSubmitted">
-                <h3><i class="fas fa-check-circle"></i> Reservation Form Submitted Successfully!</h3>
-                <p>Customer: <strong>{{ submittedData.customerName }}</strong> | Guests: <strong>{{ submittedData.guests }}</strong> | Table: <strong>{{ submittedData.tableType }}</strong></p>
-                <button class="btn-primary" style="margin-top: 1rem;" ng-click="resetForm()">Make Another Reservation</button>
-    <!-- 1. Hero Section (Logo & Banner Image) -->
-    <header class="hero-section">
-        <div class="hero-content">
-            <!-- Restaurant Logo Image -->
-            <img ng-src="{{ restaurant.logo }}" alt="Dine Ease Logo" class="hero-logo-img">
-            <!-- Concept: uppercase filter -->
-            <h1 class="hero-title">{{ restaurant.name | uppercase }}</h1>
-            <p class="hero-subtitle">Dashboard Overview Module — Team Lead: Adrian</p>
-        </div>
-    </header>
-
-    <!-- 2. Dashboard Cards Module (Adrian) -->
-    <section id="dashboard-section" class="container">
-        <div class="section-title-wrap">
-            <h2 class="section-title">Live Overview</h2>
-            <p class="section-subtitle">Real-time table availability, specials, and ratings</p>
-        </div>
-
-        <div class="dashboard-grid">
-            <!-- Concepts Used: ng-repeat, ng-style, Expressions, Images -->
-            <div class="dash-card" ng-repeat="card in getDashboardCards()" ng-style="card.cardStyle">
-                <!-- Card Image -->
-                <div class="dash-card-image-wrap">
-                    <img ng-src="{{ card.image }}" alt="{{ card.title }}" class="dash-card-img">
-                </div>
-
-                <div class="dash-card-body">
-                    <div class="dash-card-header">
-                        <div class="dash-icon">
-                            <i class="fas {{ card.icon }}"></i>
-                        </div>
-                        <span class="dash-badge">{{ card.badge }}</span>
-                    </div>
+        <div class="menu-container">
+            <div class="menu-card" ng-repeat="item in menuItems">
+                <img ng-src="{{ item.image }}" alt="{{ item.name }}" class="menu-image">
+                <div class="menu-details">
+                    <h3>{{ item.name }}</h3>
                     
-                    <!-- Dashboard Expressions -->
-                    <div class="dash-value">{{ card.value }}</div>
-                    <div class="dash-title">{{ card.title }}</div>
-                    <div class="dash-subtitle">{{ card.subtitle }}</div>
+                    <p class="category">Category: {{ item.category }}</p>
+                    
+                    <p class="price">Price: {{ item.price | currency:'₹' }}</p>
+                    
+                    <span class="type-badge" ng-class="{'badge-veg': item.type === 'Veg', 'badge-non-veg': item.type === 'Non-Veg'}">
+                        {{ item.type }}
+                    </span>
+                    
+                    <p class="availability">
+                        <span ng-if="item.available">Available</span>
+                        <span ng-if="!item.available">Out of Stock</span>
+                    </p>
+                    
+                    <div class="order-controls" ng-if="item.available">
+                        <label for="quantity-{{item.id}}">Qty:</label>
+                        <input type="number" id="quantity-{{item.id}}" ng-model="item.quantity" min="1" max="10">
+                        <button ng-click="addToCart(item)">Add</button>
+                    </div>
                 </div>
+                
             </div>
         </div>
     </section>
