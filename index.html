@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dine Ease - Table Reservation & Food Pre-Ordering POS</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
     <!-- Hugeicons Webfont CDN -->
     <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
     <!-- FontAwesome 6 Brands CDN -->
@@ -311,7 +314,7 @@
                 <section class="section-header" ng-if="!searchQuery && selectedCategory === 'All'">
                     <h2 class="section-title">Special Discount Today</h2>
                     <span class="section-badge">
-                        <i class="hgi-stroke hgi-time-01 icon-sm" style="margin-right: 4px;"></i> Ends in 12 : 10 : 09
+                        <i class="hgi-stroke hgi-time-01 icon-sm" style="margin-right: 4px;"></i> Ends in {{ getFormattedDealTimer() }}
                     </span>
                 </section>
 
