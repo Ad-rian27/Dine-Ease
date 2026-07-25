@@ -110,6 +110,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             distance: "0.8 km",
             totalTables: 20,
             reservedTablesCount: 5,
+            initialReservedCount: 5,
             address: "142 Culinary Avenue, Fine Dining District",
             image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
             tagline: "Experience Global Culinary Excellence",
@@ -132,6 +133,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             distance: "1.4 km",
             totalTables: 16,
             reservedTablesCount: 4,
+            initialReservedCount: 4,
             address: "88 Rue de Paris, Fine Dining District",
             image: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80",
             tagline: "Authentic Parisian Gastronomy & Fine Wine",
@@ -153,6 +155,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             distance: "2.1 km",
             totalTables: 18,
             reservedTablesCount: 6,
+            initialReservedCount: 6,
             address: "204 Sakura Lane, Asian Culinary District",
             image: "https://images.unsplash.com/photo-1578474846511-04ba529f0b88?auto=format&fit=crop&w=800&q=80",
             tagline: "Master Omakase & Premium Sake Bar",
@@ -174,6 +177,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             distance: "1.8 km",
             totalTables: 15,
             reservedTablesCount: 3,
+            initialReservedCount: 3,
             address: "55 Spice Garden Way, Culinary Hub",
             image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=800&q=80",
             tagline: "Heritage Royal Recipes & Smoked Tandoor",
@@ -195,6 +199,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             distance: "3.0 km",
             totalTables: 16,
             reservedTablesCount: 4,
+            initialReservedCount: 4,
             address: "12 Via Napoli, Gourmet Arcade",
             image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
             tagline: "Handmade Pasta & Woodfired Neapolitan Pizza",
@@ -216,6 +221,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             distance: "2.5 km",
             totalTables: 14,
             reservedTablesCount: 14,
+            initialReservedCount: 14,
             address: "77 Flame Boulevard, Uptown Towers",
             image: "https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=800&q=80",
             tagline: "Oak-Smoked Aged Steaks & Bourbon Cocktails",
@@ -289,17 +295,149 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
     $scope.reservationStep = 'select_restaurant'; // 'select_restaurant' | 'form'
 
     $scope.selectRestaurantForBooking = function (res) {
+        $scope.currentSessionAllocatedTables = 0;
+        $scope.currentSessionVenueId = null;
         $scope.selectedRestaurant = res;
         $scope.reservationStep = 'form';
         window.scrollTo(0, 0);
     };
 
     $scope.goBackToRestaurantList = function () {
+        $scope.currentSessionAllocatedTables = 0;
+        $scope.currentSessionVenueId = null;
         $scope.reservationStep = 'select_restaurant';
     };
 
     $scope.setMenuRestaurant = function (res) {
         $scope.selectedRestaurant = res;
+    };
+
+    $scope.getRequiredTables = function (guests) {
+        var g = parseInt(guests, 10);
+        if (isNaN(g) || g < 1) g = 1;
+        return Math.max(1, Math.ceil(g / 4));
+    };
+
+    $scope.getAvailableTables = function (res) {
+        var target = res || $scope.selectedRestaurant || $scope.restaurant;
+        if (!target) return 0;
+        var total = target.totalTables || 20;
+        var reserved = target.reservedTablesCount || 0;
+        return Math.max(0, total - reserved);
+    };
+
+    $scope.isFullyBooked = function (res) {
+        return $scope.getAvailableTables(res) <= 0;
+    };
+
+    $scope.hasEnoughCapacity = function (res, guests) {
+        var target = res || $scope.selectedRestaurant;
+        if (!target) return true;
+        var req = $scope.getRequiredTables(guests);
+        var avail = $scope.getAvailableTables(target);
+        return avail >= req;
+    };
+
+    $scope.reserveTable = function (form) {
+        if (form) {
+            form.$setSubmitted();
+        }
+
+        if ($scope.isFullyBooked($scope.selectedRestaurant)) {
+            alert('Booking Unavailable: ' + ($scope.selectedRestaurant ? $scope.selectedRestaurant.name : 'Selected restaurant') + ' is fully booked! No tables available.');
+            return;
+        }
+
+        var reqTables = $scope.getRequiredTables($scope.reservation.guests);
+        var availTables = $scope.getAvailableTables($scope.selectedRestaurant);
+
+        if (availTables < reqTables) {
+            alert('Insufficient Capacity: Reservation for ' + $scope.reservation.guests + ' guests requires ' + reqTables + ' table(s), but ' + ($scope.selectedRestaurant ? $scope.selectedRestaurant.name : 'selected venue') + ' only has ' + availTables + ' table(s) available.');
+            return;
+        }
+
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        var phoneRegex = /^[6-9]\d{9}$/;
+
+        if (form && form.$invalid) {
+            alert('Please fix the validation errors highlighted in red before submitting your reservation.');
+            return;
+        }
+
+        if (!$scope.reservation.customerName || $scope.reservation.customerName.trim().length < 2) {
+            alert('Please enter a valid Customer Name (minimum 2 characters).');
+            return;
+        }
+
+        if (!$scope.reservation.email || !emailRegex.test($scope.reservation.email)) {
+            alert('Please enter a valid Email Address format (e.g. name@domain.com).');
+            return;
+        }
+
+        if (!$scope.reservation.phone || !phoneRegex.test($scope.reservation.phone)) {
+            alert('Please enter a valid 10-digit mobile number (e.g. 9876543210).');
+            return;
+        }
+
+        if (!$scope.reservation.guests || $scope.reservation.guests < 1 || $scope.reservation.guests > 20) {
+            alert('Number of Guests must be between 1 and 20.');
+            return;
+        }
+
+        if (!$scope.reservation.date || !$scope.reservation.time) {
+            alert('Please select a valid Reservation Date and Time.');
+            return;
+        }
+
+        $scope.submittedData = angular.copy($scope.reservation);
+        if ($scope.submittedData.phone && $scope.submittedData.phone.indexOf('+91') !== 0) {
+            $scope.submittedData.phone = '+91 ' + $scope.submittedData.phone;
+        }
+
+        // Sync user input to payment defaults
+        if ($scope.submittedData.customerName) {
+            $scope.cardData.name = $scope.submittedData.customerName;
+        }
+        if ($scope.submittedData.email) {
+            $scope.upiData.vpa = $scope.submittedData.email.split('@')[0] + '@okaxis';
+        }
+
+        // Update reserved tables count safely with session rollback
+        if ($scope.selectedRestaurant) {
+            if ($scope.currentSessionAllocatedTables && $scope.currentSessionVenueId === $scope.selectedRestaurant.id) {
+                $scope.selectedRestaurant.reservedTablesCount = Math.max(0, $scope.selectedRestaurant.reservedTablesCount - $scope.currentSessionAllocatedTables);
+            }
+            $scope.currentSessionAllocatedTables = reqTables;
+            $scope.currentSessionVenueId = $scope.selectedRestaurant.id;
+            $scope.selectedRestaurant.reservedTablesCount = Math.min($scope.selectedRestaurant.totalTables, ($scope.selectedRestaurant.reservedTablesCount || 0) + reqTables);
+        }
+
+        $scope.isSubmitted = true;
+        $scope.isBooked = true;
+        $scope.pendingTablePayment = true;
+
+        $scope.switchView('summary');
+    };
+
+    $scope.manualReserveTable = function (res) {
+        var target = res || $scope.selectedRestaurant;
+        if (!target) return;
+        if (target.reservedTablesCount < target.totalTables) {
+            target.reservedTablesCount++;
+        } else {
+            alert(target.name + ' is already fully booked (' + target.totalTables + '/' + target.totalTables + ')!');
+        }
+    };
+
+    $scope.manualReleaseTable = function (res) {
+        var target = res || $scope.selectedRestaurant;
+        if (!target) return;
+        var minLimit = target.initialReservedCount !== undefined ? target.initialReservedCount : 0;
+        if (target.reservedTablesCount > minLimit) {
+            target.reservedTablesCount--;
+        } else {
+            alert('Cannot release table: Table bookings cannot be decremented below the baseline system reserved limit (' + minLimit + '/' + target.totalTables + ').');
+        }
     };
 
     // ==== FOOD MENU DATA ====
@@ -845,104 +983,6 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         };
 
         $scope.reservedTablesCount = 5;
-    };
-
-    $scope.reserveTable = function (form) {
-        if (form) {
-            form.$setSubmitted();
-        }
-
-        if ($scope.isFullyBooked($scope.selectedRestaurant)) {
-            alert('Booking Unavailable: ' + ($scope.selectedRestaurant ? $scope.selectedRestaurant.name : 'Selected restaurant') + ' is fully booked! No tables available.');
-            return;
-        }
-
-        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        var phoneRegex = /^[6-9]\d{9}$/;
-
-        if (form && form.$invalid) {
-            alert('Please fix the validation errors highlighted in red before submitting your reservation.');
-            return;
-        }
-
-        if (!$scope.reservation.customerName || $scope.reservation.customerName.trim().length < 2) {
-            alert('Please enter a valid Customer Name (minimum 2 characters).');
-            return;
-        }
-
-        if (!$scope.reservation.email || !emailRegex.test($scope.reservation.email)) {
-            alert('Please enter a valid Email Address format (e.g. name@domain.com).');
-            return;
-        }
-
-        if (!$scope.reservation.phone || !phoneRegex.test($scope.reservation.phone)) {
-            alert('Please enter a valid 10-digit mobile number (e.g. 9876543210).');
-            return;
-        }
-
-        if (!$scope.reservation.guests || $scope.reservation.guests < 1 || $scope.reservation.guests > 20) {
-            alert('Number of Guests must be between 1 and 20.');
-            return;
-        }
-
-        if (!$scope.reservation.date || !$scope.reservation.time) {
-            alert('Please select a valid Reservation Date and Time.');
-            return;
-        }
-
-        $scope.submittedData = angular.copy($scope.reservation);
-        if ($scope.submittedData.phone && $scope.submittedData.phone.indexOf('+91') !== 0) {
-            $scope.submittedData.phone = '+91 ' + $scope.submittedData.phone;
-        }
-
-        // Sync user input to payment defaults
-        if ($scope.submittedData.customerName) {
-            $scope.cardData.name = $scope.submittedData.customerName;
-        }
-        if ($scope.submittedData.email) {
-            $scope.upiData.vpa = $scope.submittedData.email.split('@')[0] + '@okaxis';
-        }
-
-        // Increment reserved tables count for this restaurant upon booking
-        if ($scope.selectedRestaurant && $scope.selectedRestaurant.reservedTablesCount < $scope.selectedRestaurant.totalTables) {
-            $scope.selectedRestaurant.reservedTablesCount++;
-        }
-
-        $scope.isSubmitted = true;
-        $scope.isBooked = true;
-        $scope.pendingTablePayment = true;
-
-        $scope.switchView('summary');
-    };
-
-    $scope.getAvailableTables = function (res) {
-        var target = res || $scope.selectedRestaurant || $scope.restaurant;
-        if (!target) return 0;
-        var total = target.totalTables || 20;
-        var reserved = target.reservedTablesCount || 0;
-        return Math.max(0, total - reserved);
-    };
-
-    $scope.isFullyBooked = function (res) {
-        return $scope.getAvailableTables(res) <= 0;
-    };
-
-    $scope.manualReserveTable = function (res) {
-        var target = res || $scope.selectedRestaurant;
-        if (!target) return;
-        if (target.reservedTablesCount < target.totalTables) {
-            target.reservedTablesCount++;
-        } else {
-            alert(target.name + ' is already fully booked (' + target.totalTables + '/' + target.totalTables + ')!');
-        }
-    };
-
-    $scope.manualReleaseTable = function (res) {
-        var target = res || $scope.selectedRestaurant;
-        if (!target) return;
-        if (target.reservedTablesCount > 0) {
-            target.reservedTablesCount--;
-        }
     };
 
     $scope.getTodaysSpecialCount = function () {

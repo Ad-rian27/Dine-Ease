@@ -633,8 +633,8 @@
                                     Capacity: <strong style="color: var(--text-main);">{{ res.reservedTablesCount }}/{{ res.totalTables }} Booked</strong>
                                 </span>
                                 <div style="display: flex; gap: 4px; align-items: center;">
-                                    <button class="btn-step" ng-click="manualReleaseTable(res)" title="Release a table (Increase available count)" style="width: 24px; height: 24px; font-size: 11px; padding: 0;">-</button>
-                                    <button class="btn-step" ng-click="manualReserveTable(res)" title="Occupy a table (Decrease available count)" style="width: 24px; height: 24px; font-size: 11px; padding: 0;">+</button>
+                                    <button class="btn-step" ng-click="manualReleaseTable(res)" ng-disabled="res.reservedTablesCount <= (res.initialReservedCount !== undefined ? res.initialReservedCount : 0)" title="Release a table (Cannot go below baseline)" style="width: 24px; height: 24px; font-size: 11px; padding: 0;" ng-style="res.reservedTablesCount <= (res.initialReservedCount !== undefined ? res.initialReservedCount : 0) && {'opacity': '0.35', 'cursor': 'not-allowed'}">-</button>
+                                    <button class="btn-step" ng-click="manualReserveTable(res)" ng-disabled="res.reservedTablesCount >= res.totalTables" title="Occupy a table (Decrease available count)" style="width: 24px; height: 24px; font-size: 11px; padding: 0;" ng-style="res.reservedTablesCount >= res.totalTables && {'opacity': '0.35', 'cursor': 'not-allowed'}">+</button>
                                 </div>
                             </div>
                         </div>
@@ -710,6 +710,15 @@
                         </div>
                     </div>
 
+                    <!-- Insufficient Capacity Alert Banner -->
+                    <div class="fully-booked-banner" ng-if="!hasEnoughCapacity(selectedRestaurant, reservation.guests) && !isFullyBooked(selectedRestaurant)" style="padding: 16px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 12px; margin: 16px 0; color: #9a3412; display: flex; align-items: center; gap: 12px;">
+                        <i class="hgi-stroke hgi-alert-circle icon-xl" style="color: #ea580c; flex-shrink: 0;"></i>
+                        <div>
+                            <h4 style="font-size: 15px; font-weight: 700; margin: 0 0 2px 0;">Capacity Exceeded — Insufficient Tables</h4>
+                            <p style="font-size: 13px; margin: 0; opacity: 0.9;">Booking for <strong>{{ reservation.guests }} guests</strong> requires <strong>{{ getRequiredTables(reservation.guests) }} table(s)</strong> (4 guests/table), but <strong>{{ selectedRestaurant.name }}</strong> only has <strong>{{ getAvailableTables(selectedRestaurant) }} table(s) available</strong>.</p>
+                        </div>
+                    </div>
+
                     <!-- Table Type Visual Selection Cards -->
                     <label class="custom-label" style="margin-bottom: 10px;">
                         <i class="hgi-stroke hgi-restaurant-01 icon-sm" style="margin-right: 4px;"></i> Select Dining
@@ -760,6 +769,9 @@
                                     style="margin-right: 4px;"></i> Number of Guests *</label>
                             <input type="number" name="guests" ng-model="reservation.guests" min="1" max="20" required
                                 class="custom-input" placeholder="Number of guests">
+                            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
+                                Table Allocation: <strong>{{ getRequiredTables(reservation.guests) }} table(s)</strong> required (up to 4 guests per table).
+                            </span>
                             <div class="field-error-msg" ng-if="(reservationForm.guests.$touched || reservationForm.$submitted) && reservationForm.guests.$invalid">
                                 <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
                                 <span ng-if="reservationForm.guests.$error.required">Number of guests is required.</span>
@@ -829,18 +841,24 @@
                         </div>
 
                         <div class="form-group-full" style="margin-top: 14px;">
-                            <button type="submit" class="btn-reserve-submit" ng-disabled="reservationForm.$invalid || isFullyBooked(selectedRestaurant)" ng-class="{'is-ready': !reservationForm.$invalid && !isFullyBooked(selectedRestaurant), 'is-disabled': reservationForm.$invalid && !isFullyBooked(selectedRestaurant), 'is-full': isFullyBooked(selectedRestaurant)}">
-                                <!-- Ready State (Valid Form & Table Available) -->
-                                <span ng-if="!reservationForm.$invalid && !isFullyBooked(selectedRestaurant)" class="btn-state-content">
+                            <button type="submit" class="btn-reserve-submit" ng-disabled="reservationForm.$invalid || isFullyBooked(selectedRestaurant) || !hasEnoughCapacity(selectedRestaurant, reservation.guests)" ng-class="{'is-ready': !reservationForm.$invalid && !isFullyBooked(selectedRestaurant) && hasEnoughCapacity(selectedRestaurant, reservation.guests), 'is-disabled': reservationForm.$invalid && !isFullyBooked(selectedRestaurant) && hasEnoughCapacity(selectedRestaurant, reservation.guests), 'is-full': isFullyBooked(selectedRestaurant) || !hasEnoughCapacity(selectedRestaurant, reservation.guests)}">
+                                <!-- Ready State (Valid Form & Table Capacity Available) -->
+                                <span ng-if="!reservationForm.$invalid && !isFullyBooked(selectedRestaurant) && hasEnoughCapacity(selectedRestaurant, reservation.guests)" class="btn-state-content">
                                     <i class="hgi-stroke hgi-calendar-01 icon-md"></i>
                                     <span>Confirm & Reserve Table at {{ selectedRestaurant.shortName }}</span>
                                     <i class="hgi-stroke hgi-arrow-right-01 icon-sm"></i>
                                 </span>
 
                                 <!-- Incomplete Form State -->
-                                <span ng-if="reservationForm.$invalid && !isFullyBooked(selectedRestaurant)" class="btn-state-content">
+                                <span ng-if="reservationForm.$invalid && !isFullyBooked(selectedRestaurant) && hasEnoughCapacity(selectedRestaurant, reservation.guests)" class="btn-state-content">
                                     <i class="hgi-stroke hgi-information-circle icon-md"></i>
                                     <span>Complete All Required Fields to Reserve</span>
+                                </span>
+
+                                <!-- Insufficient Capacity State -->
+                                <span ng-if="!reservationForm.$invalid && !isFullyBooked(selectedRestaurant) && !hasEnoughCapacity(selectedRestaurant, reservation.guests)" class="btn-state-content">
+                                    <i class="hgi-stroke hgi-alert-circle icon-md"></i>
+                                    <span>Not Enough Tables for {{ reservation.guests }} Guests (Only {{ getAvailableTables(selectedRestaurant) }} Left)</span>
                                 </span>
 
                                 <!-- Fully Booked State -->
