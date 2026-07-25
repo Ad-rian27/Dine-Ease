@@ -691,55 +691,83 @@
                     <form name="reservationForm" ng-submit="reserveTable(reservationForm)" novalidate class="form-grid">
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-user icon-sm"
-                                    style="margin-right: 4px;"></i> Customer Name</label>
-                            <input type="text" ng-model="reservation.customerName" required class="custom-input"
+                                    style="margin-right: 4px;"></i> Customer Name *</label>
+                            <input type="text" name="customerName" ng-model="reservation.customerName" required ng-minlength="2" class="custom-input"
                                 placeholder="Full name">
+                            <div class="field-error-msg" ng-if="(reservationForm.customerName.$touched || reservationForm.$submitted) && reservationForm.customerName.$invalid">
+                                <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
+                                <span ng-if="reservationForm.customerName.$error.required">Customer Name is required.</span>
+                                <span ng-if="reservationForm.customerName.$error.minlength">Name must be at least 2 characters.</span>
+                            </div>
                         </div>
 
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-mail-01 icon-sm"
-                                    style="margin-right: 4px;"></i> Email Address</label>
-                            <input type="email" ng-model="reservation.email" required class="custom-input"
+                                    style="margin-right: 4px;"></i> Email Address *</label>
+                            <input type="email" name="email" ng-model="reservation.email" required ng-pattern="/^[^\s@]+@[^\s@]+\.[^\s@]+$/" class="custom-input"
                                 placeholder="email@example.com">
+                            <div class="field-error-msg" ng-if="(reservationForm.email.$touched || reservationForm.$submitted) && reservationForm.email.$invalid">
+                                <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
+                                <span ng-if="reservationForm.email.$error.required">Email address is required.</span>
+                                <span ng-if="reservationForm.email.$error.email || reservationForm.email.$error.pattern">Please enter a valid email format (e.g. name@domain.com).</span>
+                            </div>
                         </div>
 
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-user-group icon-sm"
-                                    style="margin-right: 4px;"></i> Number of Guests</label>
-                            <input type="number" ng-model="reservation.guests" min="1" max="20" required
+                                    style="margin-right: 4px;"></i> Number of Guests *</label>
+                            <input type="number" name="guests" ng-model="reservation.guests" min="1" max="20" required
                                 class="custom-input" placeholder="Number of guests">
+                            <div class="field-error-msg" ng-if="(reservationForm.guests.$touched || reservationForm.$submitted) && reservationForm.guests.$invalid">
+                                <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
+                                <span ng-if="reservationForm.guests.$error.required">Number of guests is required.</span>
+                                <span ng-if="reservationForm.guests.$error.min || reservationForm.guests.$error.max">Guests must be between 1 and 20.</span>
+                            </div>
                         </div>
 
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-calendar-01 icon-sm"
-                                    style="margin-right: 4px;"></i> Reservation Date</label>
-                            <input type="date" ng-model="reservation.date" required class="custom-input">
+                                    style="margin-right: 4px;"></i> Reservation Date *</label>
+                            <input type="date" name="date" ng-model="reservation.date" required class="custom-input">
+                            <div class="field-error-msg" ng-if="(reservationForm.date.$touched || reservationForm.$submitted) && reservationForm.date.$invalid">
+                                <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
+                                <span ng-if="reservationForm.date.$error.required">Reservation date is required.</span>
+                            </div>
                         </div>
 
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-clock-01 icon-sm"
-                                    style="margin-right: 4px;"></i> Reservation Time</label>
-                            <input type="time" ng-model="reservation.time" required class="custom-input">
+                                    style="margin-right: 4px;"></i> Reservation Time *</label>
+                            <input type="time" name="time" ng-model="reservation.time" required class="custom-input">
+                            <div class="field-error-msg" ng-if="(reservationForm.time.$touched || reservationForm.$submitted) && reservationForm.time.$invalid">
+                                <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
+                                <span ng-if="reservationForm.time.$error.required">Reservation time is required.</span>
+                            </div>
                         </div>
 
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-star icon-sm"
                                     style="margin-right: 4px;"></i> Dining Occasion</label>
-                            <select ng-model="reservation.occasion" ng-options="occ for occ in occasions"
+                            <select name="occasion" ng-model="reservation.occasion" ng-options="occ for occ in occasions"
                                 class="custom-input"></select>
                         </div>
 
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-smart-phone-02 icon-sm"
-                                    style="margin-right: 4px;"></i> Phone Number</label>
-                            <input type="tel" ng-model="reservation.phone" class="custom-input"
-                                placeholder="Phone number">
+                                    style="margin-right: 4px;"></i> Phone Number *</label>
+                            <input type="tel" name="phone" ng-model="reservation.phone" required ng-pattern="/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]{7,15}$/" class="custom-input"
+                                placeholder="e.g. +91 98765 43210">
+                            <div class="field-error-msg" ng-if="(reservationForm.phone.$touched || reservationForm.$submitted) && reservationForm.phone.$invalid">
+                                <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
+                                <span ng-if="reservationForm.phone.$error.required">Phone number is required.</span>
+                                <span ng-if="reservationForm.phone.$error.pattern">Please enter a valid phone number (10–15 digits).</span>
+                            </div>
                         </div>
 
                         <div class="form-group-full">
                             <label class="custom-label"><i class="hgi-stroke hgi-information-circle icon-sm"
                                     style="margin-right: 4px;"></i> Special Requests (Optional)</label>
-                            <input type="text" ng-model="reservation.specialRequests" class="custom-input"
+                            <input type="text" name="specialRequests" ng-model="reservation.specialRequests" class="custom-input"
                                 placeholder="Dietary restrictions, high chair, window seat preferences...">
                         </div>
 
@@ -754,7 +782,7 @@
                         </div>
 
                         <div class="form-group-full" style="margin-top: 8px;">
-                            <button type="submit" ng-disabled="reservationForm.$invalid" class="btn-primary-cta">
+                            <button type="submit" class="btn-primary-cta">
                                 Confirm & Reserve Table at {{ selectedRestaurant.shortName }}
                             </button>
                         </div>

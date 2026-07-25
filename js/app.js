@@ -838,7 +838,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             phone: '',
             date: new Date(),
             time: new Date(1970, 0, 1, 19, 30, 0),
-            guests: 2,
+            guests: 1,
             tableType: 'Indoor',
             occasion: 'Regular Dining',
             specialRequests: ''
@@ -848,8 +848,40 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
     };
 
     $scope.reserveTable = function (form) {
+        if (form) {
+            form.$setSubmitted();
+        }
+
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        var phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]{7,15}$/;
+
         if (form && form.$invalid) {
-            alert('Please complete all required fields correctly before submitting!');
+            alert('Please fix the validation errors highlighted in red before submitting your reservation.');
+            return;
+        }
+
+        if (!$scope.reservation.customerName || $scope.reservation.customerName.trim().length < 2) {
+            alert('Please enter a valid Customer Name (minimum 2 characters).');
+            return;
+        }
+
+        if (!$scope.reservation.email || !emailRegex.test($scope.reservation.email)) {
+            alert('Please enter a valid Email Address format (e.g. name@domain.com).');
+            return;
+        }
+
+        if (!$scope.reservation.phone || !phoneRegex.test($scope.reservation.phone)) {
+            alert('Please enter a valid Phone Number (10–15 digits, e.g. +91 98765 43210).');
+            return;
+        }
+
+        if (!$scope.reservation.guests || $scope.reservation.guests < 1 || $scope.reservation.guests > 20) {
+            alert('Number of Guests must be between 1 and 20.');
+            return;
+        }
+
+        if (!$scope.reservation.date || !$scope.reservation.time) {
+            alert('Please select a valid Reservation Date and Time.');
             return;
         }
 
