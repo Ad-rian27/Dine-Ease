@@ -215,7 +215,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             avgCost: "₹3,500 for two",
             distance: "2.5 km",
             totalTables: 14,
-            reservedTablesCount: 3,
+            reservedTablesCount: 14,
             address: "77 Flame Boulevard, Uptown Towers",
             image: "https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=800&q=80",
             tagline: "Oak-Smoked Aged Steaks & Bourbon Cocktails",
@@ -852,8 +852,13 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             form.$setSubmitted();
         }
 
+        if ($scope.isFullyBooked($scope.selectedRestaurant)) {
+            alert('Booking Unavailable: ' + ($scope.selectedRestaurant ? $scope.selectedRestaurant.name : 'Selected restaurant') + ' is fully booked! No tables available.');
+            return;
+        }
+
         var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        var phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]{7,15}$/;
+        var phoneRegex = /^[6-9]\d{9}$/;
 
         if (form && form.$invalid) {
             alert('Please fix the validation errors highlighted in red before submitting your reservation.');
@@ -871,7 +876,7 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         }
 
         if (!$scope.reservation.phone || !phoneRegex.test($scope.reservation.phone)) {
-            alert('Please enter a valid Phone Number (10–15 digits, e.g. +91 98765 43210).');
+            alert('Please enter a valid 10-digit mobile number (e.g. 9876543210).');
             return;
         }
 
@@ -886,13 +891,21 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         }
 
         $scope.submittedData = angular.copy($scope.reservation);
-        
+        if ($scope.submittedData.phone && $scope.submittedData.phone.indexOf('+91') !== 0) {
+            $scope.submittedData.phone = '+91 ' + $scope.submittedData.phone;
+        }
+
         // Sync user input to payment defaults
         if ($scope.submittedData.customerName) {
             $scope.cardData.name = $scope.submittedData.customerName;
         }
         if ($scope.submittedData.email) {
             $scope.upiData.vpa = $scope.submittedData.email.split('@')[0] + '@okaxis';
+        }
+
+        // Increment reserved tables count for this restaurant upon booking
+        if ($scope.selectedRestaurant && $scope.selectedRestaurant.reservedTablesCount < $scope.selectedRestaurant.totalTables) {
+            $scope.selectedRestaurant.reservedTablesCount++;
         }
 
         $scope.isSubmitted = true;
@@ -902,11 +915,34 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         $scope.switchView('summary');
     };
 
-    $scope.getAvailableTables = function () {
-        if ($scope.selectedRestaurant) {
-            return $scope.selectedRestaurant.totalTables - $scope.selectedRestaurant.reservedTablesCount;
+    $scope.getAvailableTables = function (res) {
+        var target = res || $scope.selectedRestaurant || $scope.restaurant;
+        if (!target) return 0;
+        var total = target.totalTables || 20;
+        var reserved = target.reservedTablesCount || 0;
+        return Math.max(0, total - reserved);
+    };
+
+    $scope.isFullyBooked = function (res) {
+        return $scope.getAvailableTables(res) <= 0;
+    };
+
+    $scope.manualReserveTable = function (res) {
+        var target = res || $scope.selectedRestaurant;
+        if (!target) return;
+        if (target.reservedTablesCount < target.totalTables) {
+            target.reservedTablesCount++;
+        } else {
+            alert(target.name + ' is already fully booked (' + target.totalTables + '/' + target.totalTables + ')!');
         }
-        return $scope.restaurant ? ($scope.restaurant.totalTables - $scope.reservedTablesCount) : 15;
+    };
+
+    $scope.manualReleaseTable = function (res) {
+        var target = res || $scope.selectedRestaurant;
+        if (!target) return;
+        if (target.reservedTablesCount > 0) {
+            target.reservedTablesCount--;
+        }
     };
 
     $scope.getTodaysSpecialCount = function () {

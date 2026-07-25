@@ -37,7 +37,7 @@
                 <nav class="nav-links">
                     <button class="nav-btn" ng-class="{'active': currentView === 'dashboard'}"
                         ng-click="switchView('dashboard')">
-                        <i class="hgi-stroke hgi-dashboard-square-01 icon-sm"></i> Dashboard
+                        <i class="hgi-stroke hgi-home-01 icon-sm"></i> Home
                     </button>
                     <button class="nav-btn"
                         ng-class="{'active': currentView === 'reservation' || currentView === 'summary'}"
@@ -154,11 +154,15 @@
                 </a>
             </div>
             <div class="dashboard-venues-grid">
-                <div class="restaurant-card-style" ng-repeat="res in restaurants.slice(0, 3) track by res.id">
+                <div class="restaurant-card-style" ng-repeat="res in restaurants.slice(0, 3) track by res.id" ng-class="{'card-fully-booked': isFullyBooked(res)}">
                     <div class="restaurant-img-container">
                         <img ng-src="{{ res.image }}" alt="{{ res.name }}">
                         <span class="rating-badge-pill">
                             <i class="hgi-stroke hgi-star icon-sm" style="color: #facc15;"></i> {{ res.rating }}
+                        </span>
+                        <span class="table-availability-badge" ng-class="{'available': !isFullyBooked(res), 'full': isFullyBooked(res)}">
+                            <i class="hgi-stroke icon-sm" ng-class="{'hgi-restaurant-table': !isFullyBooked(res), 'hgi-cancel-01': isFullyBooked(res)}"></i>
+                            {{ isFullyBooked(res) ? 'Fully Booked' : (getAvailableTables(res) + ' Tables Left') }}
                         </span>
                     </div>
 
@@ -180,10 +184,14 @@
                             <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">{{ res.avgCost
                                 }}</span>
                         </div>
-                        <button class="btn-primary-cta"
+                        <button class="btn-primary-cta" ng-if="!isFullyBooked(res)"
                             style="height: 38px; width: auto; padding: 0 16px; font-size: 12px; border-radius: 8px;"
                             ng-click="selectRestaurantForBooking(res); switchView('reservation');">
                             <i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 4px;"></i> Reserve Table
+                        </button>
+                        <button class="btn-disabled-cta" ng-if="isFullyBooked(res)" disabled
+                            style="height: 38px; width: auto; padding: 0 16px; font-size: 12px; border-radius: 8px; background: #e2e8f0; color: #64748b; cursor: not-allowed; border: 1px solid #cbd5e1; font-weight: 600;">
+                            <i class="hgi-stroke hgi-cancel-01 icon-sm" style="margin-right: 4px; color: #ef4444;"></i> Fully Booked
                         </button>
                     </div>
                 </div>
@@ -593,11 +601,15 @@
 
                 <!-- Restaurant Cards Grid (Matching food-card UI Layout) -->
                 <div class="restaurant-cards-grid">
-                    <div class="restaurant-card-style" ng-repeat="res in getFilteredRestaurants()">
+                    <div class="restaurant-card-style" ng-repeat="res in getFilteredRestaurants()" ng-class="{'card-fully-booked': isFullyBooked(res)}">
                         <div class="restaurant-img-container">
                             <img ng-src="{{ res.image }}" alt="{{ res.name }}">
                             <span class="rating-badge-pill">
                                 <i class="hgi-stroke hgi-star icon-sm" style="color: #facc15;"></i> {{ res.rating }}
+                            </span>
+                            <span class="table-availability-badge" ng-class="{'available': !isFullyBooked(res), 'full': isFullyBooked(res)}">
+                                <i class="hgi-stroke icon-sm" ng-class="{'hgi-restaurant-table': !isFullyBooked(res), 'hgi-cancel-01': isFullyBooked(res)}"></i>
+                                {{ isFullyBooked(res) ? 'Fully Booked' : (getAvailableTables(res) + ' Tables Left') }}
                             </span>
                         </div>
 
@@ -614,6 +626,17 @@
                             <div class="restaurant-features-tags" style="margin-top: 8px;">
                                 <span class="res-feature-pill" ng-repeat="feat in res.features">{{ feat }}</span>
                             </div>
+
+                            <!-- Table Count Quick Capacity Manager -->
+                            <div style="margin-top: 10px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; border: 1px solid var(--border-color);">
+                                <span style="font-weight: 600; color: var(--text-muted);">
+                                    Capacity: <strong style="color: var(--text-main);">{{ res.reservedTablesCount }}/{{ res.totalTables }} Booked</strong>
+                                </span>
+                                <div style="display: flex; gap: 4px; align-items: center;">
+                                    <button class="btn-step" ng-click="manualReleaseTable(res)" title="Release a table (Increase available count)" style="width: 24px; height: 24px; font-size: 11px; padding: 0;">-</button>
+                                    <button class="btn-step" ng-click="manualReserveTable(res)" title="Occupy a table (Decrease available count)" style="width: 24px; height: 24px; font-size: 11px; padding: 0;">+</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Card Bottom Section (Matching food-card bottom layout) -->
@@ -627,11 +650,15 @@
                                     }}</span>
                             </div>
 
-                            <button class="btn-primary-cta"
+                            <button class="btn-primary-cta" ng-if="!isFullyBooked(res)"
                                 style="height: 38px; width: auto; padding: 0 16px; font-size: 12px; border-radius: 8px;"
                                 ng-click="selectRestaurantForBooking(res)">
                                 <i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 4px;"></i> Reserve
                                 Table
+                            </button>
+                            <button class="btn-disabled-cta" ng-if="isFullyBooked(res)" disabled
+                                style="height: 38px; width: auto; padding: 0 16px; font-size: 12px; border-radius: 8px; background: #e2e8f0; color: #64748b; cursor: not-allowed; border: 1px solid #cbd5e1; font-weight: 600;">
+                                <i class="hgi-stroke hgi-cancel-01 icon-sm" style="margin-right: 4px; color: #ef4444;"></i> Fully Booked
                             </button>
                         </div>
                     </div>
@@ -646,11 +673,17 @@
 
                     <!-- Selected Restaurant Header Bar -->
                     <div class="selected-restaurant-header-bar">
-                        <button class="btn-secondary-cta" style="height: 36px; padding: 0 14px; font-size: 12px;"
-                            ng-click="goBackToRestaurantList()">
-                            <i class="hgi-stroke hgi-arrow-left-01 icon-sm" style="margin-right: 4px;"></i> Switch
-                            Restaurant
-                        </button>
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <button class="btn-secondary-cta" style="height: 36px; padding: 0 14px; font-size: 12px;"
+                                ng-click="goBackToRestaurantList()">
+                                <i class="hgi-stroke hgi-arrow-left-01 icon-sm" style="margin-right: 4px;"></i> Switch
+                                Restaurant
+                            </button>
+                            <span class="table-availability-badge" style="position: static;" ng-class="{'available': !isFullyBooked(selectedRestaurant), 'full': isFullyBooked(selectedRestaurant)}">
+                                <i class="hgi-stroke icon-sm" ng-class="{'hgi-restaurant-table': !isFullyBooked(selectedRestaurant), 'hgi-cancel-01': isFullyBooked(selectedRestaurant)}"></i>
+                                {{ isFullyBooked(selectedRestaurant) ? 'Fully Booked (0 Left)' : (getAvailableTables(selectedRestaurant) + ' Tables Remaining') }}
+                            </span>
+                        </div>
                         <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px;">
                             <img ng-src="{{ selectedRestaurant.image }}"
                                 style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;">
@@ -667,6 +700,15 @@
                         style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 20px 0 12px 0; display: flex; align-items: center; gap: 6px;">
                         <i class="hgi-stroke hgi-calendar-01 icon-sm"></i> Reserve Table & Select Dining Options
                     </h3>
+
+                    <!-- Fully Booked Alert Banner -->
+                    <div class="fully-booked-banner" ng-if="isFullyBooked(selectedRestaurant)" style="padding: 16px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; margin: 16px 0; color: #991b1b; display: flex; align-items: center; gap: 12px;">
+                        <i class="hgi-stroke hgi-alert-circle icon-xl" style="color: #dc2626; flex-shrink: 0;"></i>
+                        <div>
+                            <h4 style="font-size: 15px; font-weight: 700; margin: 0 0 2px 0;">Fully Booked — No Tables Available</h4>
+                            <p style="font-size: 13px; margin: 0; opacity: 0.9;">All {{ selectedRestaurant.totalTables }} tables at <strong>{{ selectedRestaurant.name }}</strong> are currently reserved. Bookings are temporarily closed for this venue.</p>
+                        </div>
+                    </div>
 
                     <!-- Table Type Visual Selection Cards -->
                     <label class="custom-label" style="margin-bottom: 10px;">
@@ -754,13 +796,18 @@
 
                         <div>
                             <label class="custom-label"><i class="hgi-stroke hgi-smart-phone-02 icon-sm"
-                                    style="margin-right: 4px;"></i> Phone Number *</label>
-                            <input type="tel" name="phone" ng-model="reservation.phone" required ng-pattern="/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]{7,15}$/" class="custom-input"
-                                placeholder="e.g. +91 98765 43210">
+                                    style="margin-right: 4px;"></i> Mobile Phone Number *</label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <span style="position: absolute; left: 12px; font-weight: 700; font-size: 13px; color: var(--text-main); pointer-events: none; display: flex; align-items: center; gap: 4px; z-index: 2;">
+                                    <span>🇮🇳</span> +91
+                                </span>
+                                <input type="tel" name="phone" ng-model="reservation.phone" required ng-pattern="/^[6-9]\d{9}$/" maxlength="10" class="custom-input" style="padding-left: 68px;"
+                                    placeholder="9876543210">
+                            </div>
                             <div class="field-error-msg" ng-if="(reservationForm.phone.$touched || reservationForm.$submitted) && reservationForm.phone.$invalid">
                                 <i class="hgi-stroke hgi-alert-circle icon-sm"></i>
-                                <span ng-if="reservationForm.phone.$error.required">Phone number is required.</span>
-                                <span ng-if="reservationForm.phone.$error.pattern">Please enter a valid phone number (10–15 digits).</span>
+                                <span ng-if="reservationForm.phone.$error.required">10-digit mobile number is required.</span>
+                                <span ng-if="reservationForm.phone.$error.pattern || reservationForm.phone.$error.maxlength">Enter a valid 10-digit mobile number (starting 6-9).</span>
                             </div>
                         </div>
 
@@ -781,9 +828,26 @@
                             <span style="font-size: 18px; font-weight: 700;">{{ getTablePrice() | currency:'₹' }}</span>
                         </div>
 
-                        <div class="form-group-full" style="margin-top: 8px;">
-                            <button type="submit" class="btn-primary-cta">
-                                Confirm & Reserve Table at {{ selectedRestaurant.shortName }}
+                        <div class="form-group-full" style="margin-top: 14px;">
+                            <button type="submit" class="btn-reserve-submit" ng-disabled="reservationForm.$invalid || isFullyBooked(selectedRestaurant)" ng-class="{'is-ready': !reservationForm.$invalid && !isFullyBooked(selectedRestaurant), 'is-disabled': reservationForm.$invalid && !isFullyBooked(selectedRestaurant), 'is-full': isFullyBooked(selectedRestaurant)}">
+                                <!-- Ready State (Valid Form & Table Available) -->
+                                <span ng-if="!reservationForm.$invalid && !isFullyBooked(selectedRestaurant)" class="btn-state-content">
+                                    <i class="hgi-stroke hgi-calendar-01 icon-md"></i>
+                                    <span>Confirm & Reserve Table at {{ selectedRestaurant.shortName }}</span>
+                                    <i class="hgi-stroke hgi-arrow-right-01 icon-sm"></i>
+                                </span>
+
+                                <!-- Incomplete Form State -->
+                                <span ng-if="reservationForm.$invalid && !isFullyBooked(selectedRestaurant)" class="btn-state-content">
+                                    <i class="hgi-stroke hgi-information-circle icon-md"></i>
+                                    <span>Complete All Required Fields to Reserve</span>
+                                </span>
+
+                                <!-- Fully Booked State -->
+                                <span ng-if="isFullyBooked(selectedRestaurant)" class="btn-state-content">
+                                    <i class="hgi-stroke hgi-cancel-circle-01 icon-md"></i>
+                                    <span>Fully Booked — Please Switch Venue</span>
+                                </span>
                             </button>
                         </div>
                     </form>
@@ -1045,7 +1109,7 @@
                             </div>
 
                             <div class="form-group-full" style="margin-top: 12px; display: flex; gap: 12px;">
-                                <button type="submit" class="btn-primary-cta" style="flex: 2;">
+                                <button type="submit" class="btn-primary-cta" style="flex: 1;">
                                     Pay {{ getFinalPayableTotal() | currency:'₹' }} Now
                                 </button>
                                 <button type="button" class="btn-secondary-cta" style="flex: 1;"
@@ -1095,7 +1159,7 @@
                                 </div>
 
                                 <div style="display: flex; gap: 12px;">
-                                    <button type="submit" class="btn-primary-cta" style="flex: 2;">
+                                    <button type="submit" class="btn-primary-cta" style="flex: 1;">
                                         Pay {{ getFinalPayableTotal() | currency:'₹' }} via UPI
                                     </button>
                                     <button type="button" class="btn-secondary-cta" style="flex: 1;"
@@ -1154,7 +1218,7 @@
                             </div>
 
                             <div style="display: flex; gap: 12px;">
-                                <button type="button" class="btn-primary-cta" style="flex: 2;"
+                                <button type="button" class="btn-primary-cta" style="flex: 1;"
                                     ng-click="completePayment()">
                                     Verify & Complete Payment
                                 </button>
@@ -1187,7 +1251,7 @@
                         </div>
 
                         <div style="display: flex; gap: 12px;">
-                            <button type="button" class="btn-primary-cta" style="flex: 2;" ng-click="completePayment()">
+                            <button type="button" class="btn-primary-cta" style="flex: 1;" ng-click="completePayment()">
                                 Proceed to Bank Portal
                             </button>
                             <button type="button" class="btn-secondary-cta" style="flex: 1;"
@@ -1210,7 +1274,7 @@
                         </div>
 
                         <div style="display: flex; gap: 12px;">
-                            <button type="button" class="btn-primary-cta" style="flex: 2;" ng-click="completePayment()">
+                            <button type="button" class="btn-primary-cta" style="flex: 1;" ng-click="completePayment()">
                                 Confirm Pay at Restaurant
                             </button>
                             <button type="button" class="btn-secondary-cta" style="flex: 1;"
