@@ -811,9 +811,41 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
     $scope.showReorderModal = false;
     $scope.selectedOrderForReorder = null;
 
+    $scope.getOrderSubtotal = function (order) {
+        if (!order) return 0;
+        if (typeof order.subtotal === 'number' && order.subtotal > 0) return order.subtotal;
+        if (!order.items || !order.items.length) return order.totalAmount || 0;
+        var sum = 0;
+        angular.forEach(order.items, function (item) {
+            sum += (item.price || 0) * (item.quantity || 1);
+        });
+        return sum;
+    };
+
+    $scope.getOrderTaxes = function (order) {
+        if (!order) return 0;
+        if (typeof order.tax === 'number' && order.tax >= 0) return order.tax;
+        var sub = $scope.getOrderSubtotal(order);
+        if (order.totalAmount && order.totalAmount > sub) {
+            var diff = order.totalAmount - sub - (order.tableFee || 0) + (order.discount || 0);
+            return diff > 0 ? diff : Math.round(sub * 0.05);
+        }
+        return Math.round(sub * 0.05);
+    };
+
+    $scope.getOrderGrandTotal = function (order) {
+        if (!order) return 0;
+        if (typeof order.totalAmount === 'number' && order.totalAmount > 0) return order.totalAmount;
+        var sub = $scope.getOrderSubtotal(order);
+        var tax = $scope.getOrderTaxes(order);
+        return sub + tax + (order.tableFee || 0) - (order.discount || 0);
+    };
+
     $scope.orderHistory = [
         {
             id: 'DE-984210',
+            restaurantName: "Dine Ease Fine Dining & Lounge",
+            customerName: "Ashil",
             date: 'Today, 08:15 PM',
             table: 'Indoor A/C (Table #4)',
             status: 'In Kitchen',
@@ -821,12 +853,18 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             prepTime: '12 mins remaining',
             paymentMethod: 'UPI (GPay)',
             items: [
-                { name: 'Beluga Caviar with Blinis', quantity: 1, price: 9500, image: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=500&q=80' }
+                { name: 'Beluga Caviar with Blinis', quantity: 1, price: 9500, type: 'Non-Veg', image: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=500&q=80' }
             ],
+            subtotal: 9500,
+            tax: 475,
+            discount: 0,
+            tableFee: 0,
             totalAmount: 9975
         },
         {
             id: 'DE-841920',
+            restaurantName: "L'Étoile French Bistro",
+            customerName: "Sophia R.",
             date: 'Yesterday, 01:30 PM',
             table: 'Rooftop VIP Lounge',
             status: 'Delivered & Served',
@@ -834,13 +872,19 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             prepTime: 'Served',
             paymentMethod: 'Credit Card',
             items: [
-                { name: 'Truffle & Wild Mushroom Risotto', quantity: 1, price: 2800, image: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=500&q=80' },
-                { name: 'Gold Leaf Chocolate Ganache', quantity: 1, price: 2100, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' }
+                { name: 'Truffle & Wild Mushroom Risotto', quantity: 1, price: 2800, type: 'Veg', image: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=500&q=80' },
+                { name: 'Gold Leaf Chocolate Ganache', quantity: 1, price: 2100, type: 'Veg', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' }
             ],
+            subtotal: 4900,
+            tax: 245,
+            discount: 0,
+            tableFee: 0,
             totalAmount: 5145
         },
         {
             id: 'DE-720194',
+            restaurantName: "Sakura Japanese Lounge",
+            customerName: "Marcus K.",
             date: 'July 20, 2026',
             table: 'Outdoor Garden Terrace',
             status: 'Delivered & Served',
@@ -848,41 +892,133 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             prepTime: 'Served',
             paymentMethod: 'NetBanking (HDFC)',
             items: [
-                { name: 'A5 Wagyu Beef Steak', quantity: 1, price: 8500, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80' },
-                { name: 'Vintage Dom Pérignon Champagne', quantity: 1, price: 18000, image: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=500&q=80' }
+                { name: 'A5 Wagyu Beef Steak', quantity: 1, price: 8500, type: 'Non-Veg', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80' },
+                { name: 'Vintage Dom Pérignon Champagne', quantity: 1, price: 18000, type: 'Veg', image: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=500&q=80' }
             ],
+            subtotal: 26500,
+            tax: 1325,
+            discount: 0,
+            tableFee: 0,
             totalAmount: 27825
         }
     ];
 
-    $scope.openReorderModal = function (order) {
+    $scope.findRestaurantForOrder = function (order) {
+        if (!order) return $scope.restaurants[0];
+        if (order.restaurantName) {
+            var match = $scope.restaurants.find(function (r) {
+                return r.name.toLowerCase().indexOf(order.restaurantName.toLowerCase()) !== -1 ||
+                       order.restaurantName.toLowerCase().indexOf(r.shortName.toLowerCase()) !== -1;
+            });
+            if (match) return match;
+        }
+        return $scope.selectedRestaurant || $scope.restaurants[0];
+    };
+
+    $scope.selectedReorderMode = 'food_and_table'; // Default: 'food_and_table' or 'food_only'
+
+    $scope.openReorderModal = function (order, $event) {
+        if ($event && typeof $event.stopPropagation === 'function') {
+            $event.stopPropagation();
+        }
         if (!order || !order.items) return;
         $scope.selectedOrderForReorder = order;
+        $scope.matchedRestaurantForReorder = $scope.findRestaurantForOrder(order);
+        $scope.selectedReorderMode = 'food_and_table';
         $scope.showReorderModal = true;
     };
 
-    $scope.closeReorderModal = function () {
-        $scope.showReorderModal = false;
-        $scope.selectedOrderForReorder = null;
+    $scope.setReorderMode = function (mode, $event) {
+        if ($event && typeof $event.stopPropagation === 'function') {
+            $event.stopPropagation();
+        }
+        $scope.selectedReorderMode = mode;
     };
 
-    $scope.confirmReorder = function () {
+    $scope.confirmSelectedReorder = function ($event) {
+        if ($event && typeof $event.stopPropagation === 'function') {
+            $event.stopPropagation();
+        }
+        if ($scope.selectedReorderMode === 'food_only') {
+            $scope.reorderFoodOnly($event);
+        } else {
+            $scope.reorderFoodAndTable($event);
+        }
+    };
+
+    $scope.closeReorderModal = function ($event) {
+        if ($event && typeof $event.stopPropagation === 'function') {
+            $event.stopPropagation();
+        }
+        $scope.showReorderModal = false;
+        $scope.selectedOrderForReorder = null;
+        $scope.matchedRestaurantForReorder = null;
+    };
+
+    $scope.reorderFoodOnly = function ($event) {
+        if ($event && typeof $event.stopPropagation === 'function') {
+            $event.stopPropagation();
+        }
         if (!$scope.selectedOrderForReorder || !$scope.selectedOrderForReorder.items) return;
         angular.forEach($scope.selectedOrderForReorder.items, function (ordItem) {
             var existing = $scope.cart.find(function (i) { return i.name === ordItem.name; });
             if (existing) {
-                existing.quantity += ordItem.quantity;
+                existing.quantity += (ordItem.quantity || 1);
             } else {
                 $scope.cart.push({
+                    id: ordItem.id || Math.floor(Math.random() * 10000),
                     name: ordItem.name,
                     price: ordItem.price,
-                    quantity: ordItem.quantity,
+                    quantity: ordItem.quantity || 1,
+                    type: ordItem.type || 'Veg',
                     image: ordItem.image
                 });
             }
         });
         $scope.closeReorderModal();
         $scope.switchView('menu');
+    };
+
+    $scope.reorderFoodAndTable = function ($event) {
+        if ($event && typeof $event.stopPropagation === 'function') {
+            $event.stopPropagation();
+        }
+        if (!$scope.selectedOrderForReorder || !$scope.selectedOrderForReorder.items) return;
+        var venue = $scope.matchedRestaurantForReorder || $scope.findRestaurantForOrder($scope.selectedOrderForReorder);
+
+        if ($scope.isFullyBooked(venue)) {
+            alert('Notice: ' + venue.name + ' is currently fully booked! We have added the food items to your cart, and you can reserve a table at another available partner venue.');
+            $scope.reorderFoodOnly();
+            return;
+        }
+
+        // Add food items to cart
+        angular.forEach($scope.selectedOrderForReorder.items, function (ordItem) {
+            var existing = $scope.cart.find(function (i) { return i.name === ordItem.name; });
+            if (existing) {
+                existing.quantity += (ordItem.quantity || 1);
+            } else {
+                $scope.cart.push({
+                    id: ordItem.id || Math.floor(Math.random() * 10000),
+                    name: ordItem.name,
+                    price: ordItem.price,
+                    quantity: ordItem.quantity || 1,
+                    type: ordItem.type || 'Veg',
+                    image: ordItem.image
+                });
+            }
+        });
+
+        // Set selected venue and navigate directly to Table Reservation step 2 form
+        $scope.selectedRestaurant = venue;
+        $scope.pendingTablePayment = true;
+        $scope.reservationStep = 'form';
+        $scope.closeReorderModal();
+        $scope.switchView('reservation');
+    };
+
+    $scope.confirmReorder = function ($event) {
+        $scope.reorderFoodAndTable($event);
     };
 
     $scope.completePayment = function () {
@@ -892,12 +1028,18 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             $scope.isProcessingPayment = false;
             $scope.paymentSuccess = true;
 
-            // Push to Order History with exact user-entered details
+            // Push to Order History with exact user-entered details & price divisions
             var newOrderId = 'DE-' + Math.floor(100000 + Math.random() * 900000);
             var newOrderItems = angular.copy($scope.cart);
             var custName = ($scope.submittedData && $scope.submittedData.customerName) ? $scope.submittedData.customerName : ($scope.cardData.name || 'Guest Customer');
-            var tableSection = ($scope.submittedData && $scope.submittedData.tableType) ? ($scope.submittedData.tableType + ' Section (' + ($scope.submittedData.guests || 2) + ' Guests)') : 'Indoor Dining';
+            var tableSection = ($scope.submittedData && $scope.submittedData.tableType) ? ($scope.submittedData.tableType + ' Section (' + ($scope.submittedData.guests || 1) + ' Guests)') : 'Indoor Dining';
             var venueName = $scope.selectedRestaurant ? $scope.selectedRestaurant.name : ($scope.restaurant ? $scope.restaurant.name : 'Dine Ease');
+
+            var orderSub = $scope.getGrandTotal();
+            var orderTax = $scope.getTaxAmount();
+            var orderDisc = $scope.appliedDiscount || 0;
+            var orderFee = $scope.pendingTablePayment ? $scope.getTablePrice() : 0;
+            var orderFinal = $scope.amountToPay || $scope.getFinalPayableTotal();
 
             $scope.orderHistory.unshift({
                 id: newOrderId,
@@ -910,7 +1052,11 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
                 prepTime: '20-25 mins remaining',
                 paymentMethod: $scope.paymentMethod.toUpperCase(),
                 items: newOrderItems.length > 0 ? newOrderItems : [{ name: 'Table Reservation Fee (' + venueName + ')', quantity: 1, price: $scope.getTablePrice(), image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=500&q=80' }],
-                totalAmount: $scope.amountToPay || $scope.getFinalPayableTotal()
+                subtotal: orderSub,
+                tax: orderTax,
+                discount: orderDisc,
+                tableFee: orderFee,
+                totalAmount: orderFinal
             });
 
             if ($scope.paymentContext === 'food_order' || $scope.paymentContext === 'combined_order') {
