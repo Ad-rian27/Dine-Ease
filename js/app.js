@@ -90,6 +90,10 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
     };
 
     // ==== MULTI-RESTAURANT DATASET ====
+    $scope.searchState = {
+        restaurantQuery: '',
+        cuisineFilter: 'All'
+    };
     $scope.restaurantSearchQuery = '';
     $scope.selectedCuisineFilter = 'All';
     $scope.cuisinesList = ['All', 'Global Contemporary', 'French Haute Cuisine', 'Omakase & Teppanyaki', 'Modern Indian & Awadhi', 'Authentic Italian & Woodfired', 'Prime Aged Steaks & Wine Bar'];
@@ -224,15 +228,60 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         }
     ];
 
+    $scope.getCuisinesList = function () {
+        if (!$scope.restaurants) return ['All'];
+        var set = ['All'];
+        angular.forEach($scope.restaurants, function (res) {
+            if (res.cuisine && set.indexOf(res.cuisine) === -1) {
+                set.push(res.cuisine);
+            }
+        });
+        return set;
+    };
+
+    $scope.selectCuisineFilter = function (cuisine) {
+        $scope.searchState.cuisineFilter = cuisine;
+        $scope.selectedCuisineFilter = cuisine;
+    };
+
+    $scope.clearRestaurantSearch = function () {
+        $scope.searchState.restaurantQuery = '';
+        $scope.searchState.cuisineFilter = 'All';
+        $scope.restaurantSearchQuery = '';
+        $scope.selectedCuisineFilter = 'All';
+    };
+
     $scope.getFilteredRestaurants = function () {
         if (!$scope.restaurants) return [];
+        var rawQ = ($scope.searchState && $scope.searchState.restaurantQuery) || $scope.restaurantSearchQuery || '';
+        var q = rawQ.trim().toLowerCase();
+        var selCuisine = ($scope.searchState && $scope.searchState.cuisineFilter) || $scope.selectedCuisineFilter || 'All';
+
         return $scope.restaurants.filter(function (res) {
-            var matchesCuisine = ($scope.selectedCuisineFilter === 'All') || (res.cuisine === $scope.selectedCuisineFilter);
-            var matchesSearch = !$scope.restaurantSearchQuery ||
-                res.name.toLowerCase().indexOf($scope.restaurantSearchQuery.toLowerCase()) !== -1 ||
-                res.cuisine.toLowerCase().indexOf($scope.restaurantSearchQuery.toLowerCase()) !== -1 ||
-                res.shortName.toLowerCase().indexOf($scope.restaurantSearchQuery.toLowerCase()) !== -1;
-            return matchesCuisine && matchesSearch;
+            var matchesCuisine = (selCuisine === 'All') || (res.cuisine === selCuisine);
+            if (!matchesCuisine) return false;
+
+            if (!q) return true;
+
+            var inName = res.name && res.name.toLowerCase().indexOf(q) !== -1;
+            var inShort = res.shortName && res.shortName.toLowerCase().indexOf(q) !== -1;
+            var inCuisine = res.cuisine && res.cuisine.toLowerCase().indexOf(q) !== -1;
+            var inTagline = res.tagline && res.tagline.toLowerCase().indexOf(q) !== -1;
+            var inAddress = res.address && res.address.toLowerCase().indexOf(q) !== -1;
+
+            var inFeatures = false;
+            if (res.features && res.features.length) {
+                inFeatures = res.features.some(function (f) { return f.toLowerCase().indexOf(q) !== -1; });
+            }
+
+            var inMenuItems = false;
+            if ($scope.menuItems) {
+                inMenuItems = $scope.menuItems.some(function (item) {
+                    return item.restaurantId === res.id && item.name.toLowerCase().indexOf(q) !== -1;
+                });
+            }
+
+            return inName || inShort || inCuisine || inTagline || inAddress || inFeatures || inMenuItems;
         });
     };
 
@@ -560,11 +609,11 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         number: '4532 8921 3410 8821',
         expiry: '08/28',
         cvv: '842',
-        name: 'Emir Abiyyu'
+        name: ''
     };
 
     $scope.upiData = {
-        vpa: 'emir@okaxis'
+        vpa: ''
     };
 
     $scope.upiApps = [
@@ -705,18 +754,24 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
             $scope.isProcessingPayment = false;
             $scope.paymentSuccess = true;
 
-            // Push to Order History
+            // Push to Order History with exact user-entered details
             var newOrderId = 'DE-' + Math.floor(100000 + Math.random() * 900000);
             var newOrderItems = angular.copy($scope.cart);
+            var custName = ($scope.submittedData && $scope.submittedData.customerName) ? $scope.submittedData.customerName : ($scope.cardData.name || 'Guest Customer');
+            var tableSection = ($scope.submittedData && $scope.submittedData.tableType) ? ($scope.submittedData.tableType + ' Section (' + ($scope.submittedData.guests || 2) + ' Guests)') : 'Indoor Dining';
+            var venueName = $scope.selectedRestaurant ? $scope.selectedRestaurant.name : ($scope.restaurant ? $scope.restaurant.name : 'Dine Ease');
+
             $scope.orderHistory.unshift({
                 id: newOrderId,
+                customerName: custName,
+                restaurantName: venueName,
                 date: 'Just Now',
-                table: $scope.reservation.section || 'Indoor Dining',
+                table: tableSection,
                 status: 'In Kitchen',
                 statusCode: 'active',
-                prepTime: '25 mins remaining',
+                prepTime: '20-25 mins remaining',
                 paymentMethod: $scope.paymentMethod.toUpperCase(),
-                items: newOrderItems.length > 0 ? newOrderItems : [{ name: 'Table Reservation Fee', quantity: 1, price: $scope.getTablePrice(), image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=500&q=80' }],
+                items: newOrderItems.length > 0 ? newOrderItems : [{ name: 'Table Reservation Fee (' + venueName + ')', quantity: 1, price: $scope.getTablePrice(), image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=500&q=80' }],
                 totalAmount: $scope.amountToPay || $scope.getFinalPayableTotal()
             });
 
@@ -778,9 +833,15 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         $scope.pendingTablePayment = false;
 
         $scope.reservation = {
-            customerName: 'Emir Abiyyu', email: 'emir@example.com', phone: '+91 98765 43210',
-            date: new Date(), time: new Date(1970, 0, 1, 19, 30, 0),
-            guests: 4, tableType: 'Indoor', occasion: 'Regular Dining', specialRequests: ''
+            customerName: '',
+            email: '',
+            phone: '',
+            date: new Date(),
+            time: new Date(1970, 0, 1, 19, 30, 0),
+            guests: 2,
+            tableType: 'Indoor',
+            occasion: 'Regular Dining',
+            specialRequests: ''
         };
 
         $scope.reservedTablesCount = 5;
@@ -793,8 +854,18 @@ app.controller('MainController', ['$scope', '$timeout', '$interval', function ($
         }
 
         $scope.submittedData = angular.copy($scope.reservation);
+        
+        // Sync user input to payment defaults
+        if ($scope.submittedData.customerName) {
+            $scope.cardData.name = $scope.submittedData.customerName;
+        }
+        if ($scope.submittedData.email) {
+            $scope.upiData.vpa = $scope.submittedData.email.split('@')[0] + '@okaxis';
+        }
+
         $scope.isSubmitted = true;
         $scope.isBooked = true;
+        $scope.pendingTablePayment = true;
 
         $scope.switchView('summary');
     };
