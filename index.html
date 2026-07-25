@@ -28,44 +28,46 @@
         <!-- App Header Navbar -->
         <header class="app-header">
             <div class="header-container">
+                <!-- Brand Logo -->
                 <div class="brand-logo" ng-click="switchView('dashboard')">
                     <div class="logo-icon"><i class="hgi-stroke hgi-restaurant-01 icon-md"></i></div>
                     <div class="brand-name">Dine Ease</div>
                 </div>
 
-                <!-- Navigation Links with Hugeicons -->
+                <!-- Navigation Links with Hugeicons (Centered Floating Pill) -->
                 <nav class="nav-links">
                     <button class="nav-btn" ng-class="{'active': currentView === 'dashboard'}"
                         ng-click="switchView('dashboard')">
-                        <i class="hgi-stroke hgi-home-01 icon-sm"></i> Home
+                        <i class="hgi-stroke hgi-home-01 icon-sm"></i> <span>Home</span>
                     </button>
                     <button class="nav-btn"
                         ng-class="{'active': currentView === 'reservation' || currentView === 'summary'}"
                         ng-click="switchView('reservation')">
-                        <i class="hgi-stroke hgi-restaurant-table icon-sm"></i> Book Table
+                        <i class="hgi-stroke hgi-restaurant-table icon-sm"></i> <span>Book Table</span>
                     </button>
-                    <button class="nav-btn" ng-class="{'active': currentView === 'menu' || currentView === 'cart'}"
+                    <button class="nav-btn" ng-class="{'active': currentView === 'menu'}"
                         ng-click="switchView('menu')">
-                        <i class="hgi-stroke hgi-menu-restaurant icon-sm"></i> Food Menu
+                        <i class="hgi-stroke hgi-menu-restaurant icon-sm"></i> <span>Food Menu</span>
                     </button>
                     <button class="nav-btn" ng-class="{'active': currentView === 'orders'}"
                         ng-click="switchView('orders')">
-                        <i class="hgi-stroke hgi-clock-01 icon-sm"></i> Order History <span class="badge"
-                            style="background: var(--accent-orange); color: white; border-radius: 9999px; padding: 2px 6px; font-size: 11px; margin-left: 4px;">{{
-                            orderHistory.length }}</span>
+                        <i class="hgi-stroke hgi-clock-01 icon-sm"></i> <span>Order History</span>
+                        <span class="nav-badge">{{ orderHistory.length }}</span>
                     </button>
 
-                    <!-- Cart Button — utility action, no active state, sits after Order History -->
+                    <!-- Thin Divider -->
                     <span class="nav-pill-divider"></span>
-                    <button class="nav-btn nav-cart-pill" ng-click="switchView('menu')"
-                        title="View Cart — {{ cart.length }} item(s)">
-                        <i class="hgi-stroke hgi-shopping-cart-01 icon-sm"></i>
-                        <span ng-if="cart.length > 0" class="nav-cart-badge-inline">{{ cart.length }}</span>
+
+                    <!-- Cart Button Pill -->
+                    <button class="nav-btn nav-cart-pill" ng-class="{'active': currentView === 'cart'}"
+                        ng-click="switchView('menu')" title="View Cart — {{ cart.length }} item(s)">
+                        <i class="hgi-stroke hgi-shopping-cart-01 icon-sm"></i> <span>Cart</span>
+                        <span ng-if="cart.length > 0" class="nav-badge cart-badge">{{ cart.length }}</span>
                     </button>
                 </nav>
 
-                <!-- Header Actions: Search Input -->
-                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                <!-- Header Right Actions: Search Input -->
+                <div class="header-right-actions">
                     <div class="header-search">
                         <i class="hgi-stroke hgi-search-01 search-icon icon-sm"></i>
                         <input type="text" ng-model="searchQuery" placeholder="Find food or beverages..."
@@ -1466,8 +1468,8 @@
 
                     <div class="order-card-header">
                         <div>
-                            <div class="order-id-title">
-                                Order #{{ order.id }}
+                            <div class="order-id-title" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span>Order #{{ order.id }}</span>
                                 <span class="order-status-badge" ng-class="order.statusCode">
                                     <span ng-if="order.statusCode === 'active'"
                                         style="display: flex; align-items: center; gap: 4px;">
@@ -1482,8 +1484,14 @@
                                     </span>
                                 </span>
                             </div>
-                            <div
-                                style="font-size: 12px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 14px;">
+
+                            <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                <i class="hgi-stroke hgi-restaurant-01 icon-sm" style="color: var(--primary);"></i>
+                                <span>{{ order.restaurantName || 'Dine Ease Fine Dining & Lounge' }}</span>
+                                <span ng-if="order.customerName" style="font-weight: 500; color: var(--text-muted);">• Customer: <strong>{{ order.customerName }}</strong></span>
+                            </div>
+
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
                                 <span><i class="hgi-stroke hgi-calendar-01 icon-sm" style="margin-right: 4px;"></i> {{
                                     order.date }}</span>
                                 <span><i class="hgi-stroke hgi-home-01 icon-sm" style="margin-right: 4px;"></i> {{
@@ -1495,7 +1503,7 @@
 
                         <div>
                             <button class="btn-secondary-cta" style="height: 38px; padding: 0 16px; font-size: 12px;"
-                                ng-click="openReorderModal(order)">
+                                ng-click="openReorderModal(order, $event)">
                                 <i class="hgi-stroke hgi-shopping-cart-01 icon-sm" style="margin-right: 4px;"></i>
                                 Re-order Items
                             </button>
@@ -1519,18 +1527,45 @@
                             </div>
                         </div>
 
-                        <!-- Right: Summary & Total Card -->
+                        <!-- Right: Line-by-Line Price Division & Summary Side -->
                         <div class="order-summary-side">
-                            <div>
-                                <div
-                                    style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
-                                    Total Paid</div>
-                                <div style="font-size: 22px; font-weight: 800; color: var(--accent-green);">{{
-                                    order.totalAmount | currency:'₹' }}</div>
+                            <div style="font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                                <span><i class="hgi-stroke hgi-receipt-01 icon-sm" style="margin-right: 4px; color: var(--primary);"></i> Price Division</span>
+                                <span style="font-size: 10px; font-weight: 700; color: #047857; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">Verified</span>
                             </div>
-                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
-                                <i class="hgi-stroke hgi-checkmark-circle-02 icon-sm"
-                                    style="color: var(--accent-green);"></i> Paid & Confirmed
+
+                            <!-- Line items breakdown -->
+                            <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12px; margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                                    <span>Items Subtotal</span>
+                                    <span style="font-weight: 600; color: var(--text-main);">{{ getOrderSubtotal(order) | currency:'₹' }}</span>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; color: var(--text-muted);" ng-if="getOrderTaxes(order) > 0">
+                                    <span>GST & Govt Taxes (5%)</span>
+                                    <span style="font-weight: 600; color: var(--text-main);">+{{ getOrderTaxes(order) | currency:'₹' }}</span>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; color: var(--text-muted);" ng-if="order.tableFee > 0">
+                                    <span>Table Booking Fee</span>
+                                    <span style="font-weight: 600; color: var(--text-main);">+{{ order.tableFee | currency:'₹' }}</span>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; color: #047857;" ng-if="order.discount > 0">
+                                    <span>Promo Discount</span>
+                                    <span style="font-weight: 700;">-{{ order.discount | currency:'₹' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Final Paid Total -->
+                            <div style="border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                    <div style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.3px;">Total Paid</div>
+                                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Via {{ order.paymentMethod }}</div>
+                                </div>
+                                <div style="font-size: 19px; font-weight: 800; color: var(--accent-green);">
+                                    {{ (order.totalAmount || getOrderGrandTotal(order)) | currency:'₹' }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1540,9 +1575,9 @@
 
         </div>
 
-        <!-- Custom Re-Order Confirmation Modal -->
-        <div class="modal-backdrop" ng-if="showReorderModal" ng-cloak ng-click="closeReorderModal()">
-            <div class="modal-container" ng-click="$event.stopPropagation()">
+        <!-- Custom Re-Order Confirmation Modal with Table Booking Choice -->
+        <div class="modal-backdrop" ng-if="showReorderModal" ng-cloak ng-click="closeReorderModal($event)">
+            <div class="modal-container" style="max-width: 540px;" ng-click="$event.stopPropagation()">
 
                 <!-- Modal Header -->
                 <div class="modal-header">
@@ -1551,30 +1586,28 @@
                             <i class="hgi-stroke hgi-shopping-cart-01 icon-lg"></i>
                         </div>
                         <div>
-                            <h3 style="font-size: 17px; font-weight: 700; color: var(--text-main); margin: 0;">Re-Order
-                                Dishes</h3>
-                            <span style="font-size: 12px; color: var(--text-muted);">From Order #{{
-                                selectedOrderForReorder.id }}</span>
+                            <h3 style="font-size: 17px; font-weight: 700; color: var(--text-main); margin: 0;">Re-Order Preferences</h3>
+                            <span style="font-size: 12px; color: var(--text-muted);">From Order #{{ selectedOrderForReorder.id }} • {{ selectedOrderForReorder.restaurantName || 'Dine Ease' }}</span>
                         </div>
                     </div>
-                    <button class="modal-close-btn" ng-click="closeReorderModal()" title="Close">
+                    <button class="modal-close-btn" ng-click="closeReorderModal($event)" title="Close">
                         <i class="hgi-stroke hgi-cancel-01 icon-md"></i>
                     </button>
                 </div>
 
-                <!-- Modal Body: Item Preview -->
+                <!-- Modal Body: Item Preview & Re-Order Options -->
                 <div class="modal-body">
-                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-                        The following item(s) will be added directly into your active pre-order cart:
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                        Select how you would like to re-order your selected dishes from <strong>{{ (matchedRestaurantForReorder || selectedOrderForReorder).restaurantName || (matchedRestaurantForReorder || selectedOrderForReorder).name }}</strong>:
                     </p>
 
-                    <div class="reorder-items-preview-list">
+                    <!-- Items Preview -->
+                    <div class="reorder-items-preview-list" style="margin-bottom: 14px;">
                         <div class="reorder-item-preview-card" ng-repeat="item in selectedOrderForReorder.items">
                             <img ng-src="{{ item.image }}" alt="{{ item.name }}" class="reorder-preview-img">
                             <div style="flex: 1; min-width: 0;">
                                 <div class="reorder-preview-name">{{ item.name }}</div>
-                                <div class="reorder-preview-qty">Qty: {{ item.quantity }} × {{ item.price | currency:'₹'
-                                    }}</div>
+                                <div class="reorder-preview-qty">Qty: {{ item.quantity }} × {{ item.price | currency:'₹' }}</div>
                             </div>
                             <div class="reorder-preview-price">
                                 {{ (item.price * item.quantity) | currency:'₹' }}
@@ -1582,35 +1615,42 @@
                         </div>
                     </div>
 
-                    <!-- Re-order Summary Note -->
-                    <div class="reorder-summary-banner">
-                        <div>
-                            <span
-                                style="font-size: 11px; text-transform: uppercase; color: #047857; font-weight: 600; display: block;">Items
-                                to add</span>
-                            <strong style="font-size: 14px; color: var(--text-main);">{{
-                                selectedOrderForReorder.items.length }} Dish(es)</strong>
+                    <!-- Interactive Re-Order Mode Option Cards (Zero-Reflow Radio Selection) -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div class="reorder-choice-card" ng-class="{'is-selected': selectedReorderMode === 'food_only'}" ng-click="setReorderMode('food_only', $event)" ng-dblclick="reorderFoodOnly($event)">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                <div style="font-size: 13.5px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                                    <i class="hgi-stroke hgi-shopping-cart-01 icon-sm" style="color: var(--primary);"></i> Food Items Only
+                                </div>
+                                <i class="hgi-stroke icon-md choice-radio-icon" ng-class="selectedReorderMode === 'food_only' ? 'hgi-checkmark-circle-02' : 'hgi-circle'"></i>
+                            </div>
+                            <p style="font-size: 11.5px; color: var(--text-muted); margin: 0; line-height: 1.35;">Add dishes to cart for takeaway or pre-order without booking a table.</p>
                         </div>
-                        <div style="text-align: right;">
-                            <span
-                                style="font-size: 11px; text-transform: uppercase; color: #047857; font-weight: 600; display: block;">Total
-                                Amount</span>
-                            <strong style="font-size: 18px; color: var(--accent-green);">{{
-                                selectedOrderForReorder.totalAmount | currency:'₹' }}</strong>
+
+                        <div class="reorder-choice-card" ng-class="{'is-selected': selectedReorderMode === 'food_and_table'}" ng-click="setReorderMode('food_and_table', $event)" ng-dblclick="reorderFoodAndTable($event)">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                <div style="font-size: 13.5px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                                    <i class="hgi-stroke hgi-restaurant-table icon-sm" style="color: var(--primary);"></i> Food + Table Booking
+                                </div>
+                                <i class="hgi-stroke icon-md choice-radio-icon" ng-class="selectedReorderMode === 'food_and_table' ? 'hgi-checkmark-circle-02' : 'hgi-circle'"></i>
+                            </div>
+                            <p style="font-size: 11.5px; color: var(--text-muted); margin: 0; line-height: 1.35;">Add dishes & navigate directly to table booking at {{ matchedRestaurantForReorder.shortName || 'Venue' }}.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Modal Footer Actions -->
-                <div class="modal-footer">
-                    <button class="btn-secondary-cta" style="padding: 12px 18px; font-size: 13px;"
-                        ng-click="closeReorderModal()">
+                <!-- Clean Equal-Width 50/50 Modal Footer -->
+                <div class="modal-footer" style="display: flex; gap: 12px;">
+                    <button class="btn-secondary-cta" style="flex: 1; height: 44px; font-size: 13px; text-align: center;" ng-click="closeReorderModal($event)">
                         Cancel
                     </button>
-                    <button class="btn-primary-cta" style="padding: 12px 18px; font-size: 13px;"
-                        ng-click="confirmReorder()">
-                        <i class="hgi-stroke hgi-shopping-cart-01 icon-sm" style="margin-right: 6px;"></i> Confirm & Add
-                        to Cart
+                    <button class="btn-primary-cta" style="flex: 1; height: 44px; font-size: 13px; font-weight: 700; text-align: center;" ng-click="confirmSelectedReorder($event)">
+                        <span ng-show="selectedReorderMode === 'food_and_table'" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="hgi-stroke hgi-restaurant-table icon-sm"></i> Confirm & Reserve Table
+                        </span>
+                        <span ng-show="selectedReorderMode === 'food_only'" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="hgi-stroke hgi-shopping-cart-01 icon-sm"></i> Confirm & Add to Cart
+                        </span>
                     </button>
                 </div>
 
