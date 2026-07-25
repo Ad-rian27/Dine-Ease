@@ -1,6 +1,6 @@
 # 🍽️ Dine Ease — Luxury Restaurant Table Reservation & Food Pre-Ordering Platform
 
-![Dine Ease Banner](https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80)
+![Dine Ease Application Banner](assets/image.png)
 
 **Dine Ease** is a state-of-the-art, single-page web application (SPA) built for modern restaurant table reservations, live venue capacity management, interactive digital dining menus, and multi-mode payment checkouts. Designed with **AngularJS 1.8**, **Vanilla CSS3 Design System**, and **Hugeicons Stroke Iconography**, Dine Ease provides a seamless end-to-end dining experience from venue discovery to digital receipt generation.
 
