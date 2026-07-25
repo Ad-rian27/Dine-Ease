@@ -2522,3 +2522,97 @@ input[type="time"].custom-input {
     background-color: #fef2f2 !important;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
+
+/* Table Availability & Capacity Badges */
+.table-availability-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.table-availability-badge.available {
+    background: rgba(16, 185, 129, 0.9);
+    color: #ffffff;
+}
+
+.table-availability-badge.full {
+    background: rgba(225, 29, 72, 0.9);
+    color: #ffffff;
+}
+
+.card-fully-booked {
+    opacity: 0.92;
+    border-color: rgba(225, 29, 72, 0.3) !important;
+}
+
+/* Refined Reservation Form Submit Button */
+.btn-reserve-submit {
+    width: 100%;
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-reserve-submit .btn-state-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+}
+
+/* State 1: Ready to Reserve (Form Valid & Tables Available) */
+.btn-reserve-submit.is-ready {
+    background: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+}
+
+.btn-reserve-submit.is-ready:hover {
+    background: var(--primary-hover);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-reserve-submit.is-ready:active {
+    transform: translateY(0);
+}
+
+/* State 2: Incomplete / Validation Pending */
+.btn-reserve-submit.is-disabled {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* State 3: Fully Booked */
+.btn-reserve-submit.is-full {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
